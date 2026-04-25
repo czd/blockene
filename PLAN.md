@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 3 (doors + exits) ✅ wired — 46 tests green, dev level is winnable. Needs human in-browser verification of door visuals + exit animation. Slice 4 (chunky look) ready next.
+**Current status:** Slice 4 (chunky look) ✅ wired — rounded blocks with studs, board screws, three-light setup, contact shadows, grab lift, exit particles. Needs human in-browser verification + 60fps perf check on a phone. Collision squash + InstancedMesh stud optimization deferred (see Slice 4 notes).
 
 ---
 
@@ -99,22 +99,24 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 
 ---
 
-## Slice 4 — The chunky look (priority #1 polish)
+## Slice 4 — The chunky look (priority #1 polish) ✅
 
 **Goal:** screenshots-quality look.
 
-**Files:** `scene/BlockMesh.tsx`, `scene/BoardMesh.tsx`, `scene/GameScene.tsx`, `scene/palette.ts`, new `scene/anim.ts`.
+**Files:** `scene/BlockMesh.tsx`, `scene/BoardMesh.tsx`, `scene/GameScene.tsx`.
 
 **Tasks:**
-- [ ] `BlockMesh`: rounded-box geometry per cell (`drei`'s `RoundedBox`), instanced 3×3 stud mesh on top, three-tone material (top / side / highlight).
-- [ ] Soft drop shadow under each block (drei `ContactShadows` or baked plane).
-- [ ] `BoardMesh`: deep slate base, inset cell shadows, screw decorations on corners.
-- [ ] Lighting: warm key from above-right + cool fill from below-left + ambient.
-- [ ] Animations: grab lift (~5%), collision squash on blocked step, exit shrink + fade + particle burst.
-- [ ] Mobile: invisible larger hit volume mesh per block (~20% larger) per SPEC §10.
-- [ ] Performance: instance studs across blocks (one `InstancedMesh` per color), 60fps on phone-sized viewport.
+- [x] `BlockMesh`: drei `RoundedBox` per cell, 3×3 cylinder studs on top, three-tone effect via base body + brighter studs + warm/cool lighting. (Plain meshes for now — ~36 studs in the dev level fits comfortably; instancing deferred until perf demands it.)
+- [x] Soft drop shadow under each block via drei `ContactShadows`.
+- [x] `BoardMesh`: thick chunky frame, inset playfield, recessed cell tiles, four screw caps on the corners.
+- [x] Three-light setup: ambient + warm key from above-right (`#FEF3C7`) + cool fill from below-left (`#A5B4FC`).
+- [x] Grab lift: block lerps up by 0.18 z while dragging.
+- [x] Exit shrink + fade + particle burst (10 deterministic-angle sparks in the block's highlight color, arc up and out).
+- [x] Mobile: invisible 20%-larger hit volume mesh per cell.
+- [ ] Collision squash on blocked step — deferred. Needs a "blocked-this-frame" signal from the store (compare desired vs resolved each `updateDrag`) plus a brief axis-aligned scale tween.
+- [ ] InstancedMesh for studs (one per color) — deferred until 60fps fails on a real phone.
 
-**DoD:** holds 60fps with 6+ blocks animating; matches the chunky look.
+**DoD:** holds 60fps with 6+ blocks animating; matches the chunky look. ⚠️ Look matches in screenshots; needs human in-browser confirmation + a phone-viewport perf check before declaring 60fps DoD met.
 
 ---
 
