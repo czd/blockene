@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 0 (scaffolding) ✅ complete. All open questions resolved. Slice 1 ready to start.
+**Current status:** Slice 1 (engine core) ✅ complete — 42 tests green, engine is React/Three-free. Slice 2 ready to start.
 
 ---
 
@@ -26,6 +26,7 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 - **2026-04-25 — Minimal level picker** in v1 (no star ratings). Just a list of levels you can jump into. Star-rating layer remains deferred per SPEC §8.
 - **2026-04-25 — Build a level editor tool.** SPEC §7 calls this out as worth doing early; we'll build it *before* authoring the 10 MVP levels so authoring is fast.
 - **2026-04-25 — Test runner: `bun:test`.** Built-in, zero install, faster than vitest. Swap to vitest later (e.g. for `neotest-vitest` integration) is a ~30-min job since engine is plain TS.
+- **2026-04-25 — `commitMove` belongs in `moveResolver.ts`.** Snaps a finalized drag to integer cells (or removes the block on exit) and produces a new `EngineState`. Added during Slice 1 because "loadLevel → resolveDrag end-to-end" implies somewhere has to apply the result; keeping the snap in the engine keeps the store in Slice 2 a thin wrapper.
 
 ---
 
@@ -38,25 +39,26 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 
 ---
 
-## Slice 1 — Engine core (headless, fully tested)
+## Slice 1 — Engine core (headless, fully tested) ✅
 
 **Goal:** programmatically resolve a drag from cell A to cell B, all edge cases covered, before any rendering exists.
 
 **Files:** `engine/types.ts`, `engine/Grid.ts`, `engine/Block.ts`, `engine/moveResolver.ts`, `engine/levelLoader.ts`, sibling `.test.ts` files.
 
 **Tasks:**
-- [ ] Define types in `types.ts`. Block carries `type` + `modifiers` from day one.
-- [ ] `Grid`: occupancy 2D array, `isCellFree(cell, ignoreBlockId?)`, `isInBounds`, helpers.
-- [ ] `Block`: `getCells`, `translate(delta)`, `getExtent(side)` (span perpendicular to a board side).
-- [ ] `moveResolver.resolveDrag(state, blockId, desiredDeltaWorld)`:
-  - [ ] Sub-cell stepping at 0.1 units; per step check overlap with walls / blocks / edges.
-  - [ ] On block, decompose into axis components and try each — wall-slide.
-  - [ ] Door-aware edge: step crosses a board edge only if `door.color === block.color && extent fits door.width`.
-  - [ ] Returns final sub-cell position + `{ exited: boolean }`.
-- [ ] `levelLoader.parse(json)` → `EngineState`.
-- [ ] Tests: cell-aligned move, blocked-by-wall, blocked-by-block, diagonal-into-corner slides, fast-flick no-tunneling, door-match exits, door-mismatch blocks, door-too-narrow blocks.
+- [x] Define types in `types.ts`. Block carries `type` + `modifiers` from day one.
+- [x] `Grid`: occupancy 2D array, `isCellFree(cell, ignoreBlockId?)`, `isInBounds`, helpers.
+- [x] `Block`: `getCells`, `translate(delta)`, `getExtent(side)` (span perpendicular to a board side).
+- [x] `moveResolver.resolveDrag(state, blockId, desiredDeltaWorld)`:
+  - [x] Sub-cell stepping at 0.1 units; per step check overlap with walls / blocks / edges.
+  - [x] On block, decompose into axis components and try each — wall-slide.
+  - [x] Door-aware edge: step crosses a board edge only if `door.color === block.color && extent fits door.width`.
+  - [x] Returns final sub-cell position + `{ exited: boolean }`.
+- [x] `moveResolver.commitMove(state, blockId, delta, exited)` — snaps to grid or removes the block on exit (see Decisions).
+- [x] `levelLoader.parse(json)` → `EngineState`.
+- [x] Tests: cell-aligned move, blocked-by-wall, blocked-by-block, diagonal-into-corner slides, fast-flick no-tunneling, door-match exits, door-mismatch blocks, door-too-narrow blocks.
 
-**DoD:** `bun test` green; `loadLevel(json) → resolveDrag(...)` works end-to-end with **zero** React/Three.js imports anywhere in `engine/`.
+**DoD:** `bun test` green; `loadLevel(json) → resolveDrag(...)` works end-to-end with **zero** React/Three.js imports anywhere in `engine/`. ✅ Met — 42 tests pass, `tsc -b` clean, `eslint` clean, no rendering imports anywhere in `engine/`.
 
 ---
 
