@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 1 (engine core) ✅ complete — 42 tests green, engine is React/Three-free. Slice 2 ready to start.
+**Current status:** Slice 2 (R3F scene + drag) ✅ wired and builds clean — needs human in-browser verification of drag feel. Slice 3 ready to start once drag is confirmed working.
 
 ---
 
@@ -62,21 +62,21 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 
 ---
 
-## Slice 2 — Minimal R3F scene + drag
+## Slice 2 — Minimal R3F scene + drag ✅
 
 **Goal:** see and drag a block. Ugly is fine.
 
-**Files:** `state/gameStore.ts`, `scene/GameScene.tsx`, `scene/BoardMesh.tsx`, `scene/BlockMesh.tsx`, `input/useDragControls.ts`, edits to `App.tsx` + `main.tsx`.
+**Files:** `state/gameStore.ts`, `scene/GameScene.tsx`, `scene/BoardMesh.tsx`, `scene/BlockMesh.tsx`, `scene/palette.ts`, `input/useDragControls.ts`, edits to `App.tsx` + `App.css` + `index.css`.
 
 **Tasks:**
-- [ ] Zustand store wraps `EngineState`. Actions: `loadLevel`, `beginDrag`, `updateDrag`, `endDrag`, `undo`, `restart`. Store has zero game logic — delegates to `engine/moveResolver`.
-- [ ] `GameScene`: tilted ortho camera (~20°), ambient + directional light, board + blocks.
-- [ ] `BoardMesh`: flat dark plane with grid lines.
-- [ ] `BlockMesh`: per-block group, one flat-shaded cube per cell, base color from `scene/palette.ts`.
-- [ ] `useDragControls`: `onPointerDown` on a block group → `beginDrag` with raycast hit on board plane; window-level `onPointerMove` → `updateDrag`; `onPointerUp` → `endDrag`.
-- [ ] Hard-code one test level inline (no JSON loading yet).
+- [x] Zustand store wraps `EngineState`. Actions: `loadLevel`, `beginDrag`, `updateDrag`, `endDrag`, `undo`, `restart`. Store has zero game logic — delegates to `engine/moveResolver` and `engine/levelLoader`.
+- [x] `GameScene`: orthographic camera tilted ~20° (position `(cx, -cy-4, 11)` looking at the board center), ambient + directional light, board + blocks.
+- [x] `BoardMesh`: dark slate frame + base + per-cell tiles (gaps read as grid lines), wall cubes raised above the surface.
+- [x] `BlockMesh`: per-block group, one rounded-ish cube per cell, base color from `scene/palette.ts`. (Studs / three-tone material come in Slice 4.)
+- [x] `useDragControls`: window-level `pointermove`/`pointerup` listeners that raycast onto the z = 0 board plane and feed grid-space deltas into the store. `BlockMesh.onPointerDown` calls `beginDrag(blockId)` and the hook captures the start world position on the first pointermove (one-frame warmup; invisible in practice).
+- [x] Hard-code one test level inline in `App.tsx` (3 blocks, 2 walls, no doors).
 
-**DoD:** drag a block around a wall, slide diagonally into a corner, release and snap. No doors yet.
+**DoD:** drag a block around a wall, slide diagonally into a corner, release and snap. No doors yet. ⚠️ Build is clean (`tsc -b`, `eslint`, `vite build`, `bun test` all green; dev server boots and serves all transformed modules) but **actual drag feel needs human in-browser verification** — I can't test pointer interaction headlessly.
 
 ---
 
