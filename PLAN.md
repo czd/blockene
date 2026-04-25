@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 0 (scaffolding) ✅ complete. Awaiting answers to [Open questions](#open-questions) before Slice 1.
+**Current status:** Slice 0 (scaffolding) ✅ complete. All open questions resolved. Slice 1 ready to start.
 
 ---
 
@@ -18,16 +18,14 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 
 ## Open questions
 
-These are blocking decisions for upcoming slices. Resolve before the slice that needs them.
-
-1. **`src/audio/` as a new peer dir** for the sound module — OK? Alternatives: bury inside `state/`, or fold into `ui/`. *(Needed for Slice 5.)*
-2. **Test runner:** `bun:test` (built-in, zero install) or `vitest` (better editor integration)? *(Needed for Slice 1.)*
-3. **Level-select scope:** SPEC §8 lists star-rated level select as deferred. For v1, do we want even a minimal picker, or just sequential progression (current → next on win)? *(Needed for Slice 5/6.)*
-4. **Editor tool** (SPEC §7): build a tiny in-app level editor in Slice 6, or skip entirely for v1 and hand-author JSON? *(Needed for Slice 6.)*
+*(none — populate as new ones come up)*
 
 ## Decisions
 
-*(empty — populate as questions resolve, with date + one-line rationale)*
+- **2026-04-25 — `src/audio/` as a new peer dir** for the sound module. Sound is neither pure engine, 3D scene, nor React UI; clean separation reads better than burying it.
+- **2026-04-25 — Minimal level picker** in v1 (no star ratings). Just a list of levels you can jump into. Star-rating layer remains deferred per SPEC §8.
+- **2026-04-25 — Build a level editor tool.** SPEC §7 calls this out as worth doing early; we'll build it *before* authoring the 10 MVP levels so authoring is fast.
+- **2026-04-25 — Test runner: `bun:test`.** Built-in, zero install, faster than vitest. Swap to vitest later (e.g. for `neotest-vitest` integration) is a ~30-min job since engine is plain TS.
 
 ---
 
@@ -120,27 +118,51 @@ These are blocking decisions for upcoming slices. Resolve before the slice that 
 
 **Goal:** game feels alive; player can navigate.
 
-**Files:** `audio/sounds.ts` *(pending Q1)*, `assets/sounds/*.mp3`, `ui/Hud.tsx`, `ui/LevelComplete.tsx`, `App.tsx`.
+**Files:** `src/audio/sounds.ts`, `assets/sounds/*.mp3`, `ui/Hud.tsx`, `ui/LevelComplete.tsx`, `ui/LevelPicker.tsx`, `App.tsx`.
 
 **Tasks:**
 - [ ] Sound module: Howler-backed registry; `play(name)`. Triggered from store actions.
 - [ ] Wire 5 sounds: grab, slide (looped while dragging), collide, exit, win.
-- [ ] `Hud`: undo button, restart button, level number.
+- [ ] `Hud`: undo button, restart button, level number, "back to picker" button.
 - [ ] `LevelComplete`: overlay with "Next" button.
+- [ ] `LevelPicker`: minimal list of levels (numbered tiles, completed/not). No stars.
+- [ ] App routing: picker ↔ in-game, plus dev-only `#level=05` URL hash for jumping.
 - [ ] CSS-grid layout in `App.tsx`: `<Canvas>` fills, HUD overlays with safe-area insets.
 
-**DoD:** all 5 sounds fire correctly; undo/restart work; finish a level → click "Next" → next level.
+**DoD:** all 5 sounds fire; undo/restart work; finish a level → "Next" → next level; picker lets you jump anywhere.
 
 ---
 
-## Slice 6 — Levels
+## Slice 6 — Level editor tool
 
-**Goal:** ship 10.
+**Goal:** make level authoring fast enough that Slice 7 isn't a slog. SPEC §7: "even a janky one" is fine.
+
+**Files:** `ui/editor/Editor.tsx`, `ui/editor/EditorToolbar.tsx`, `engine/levelSerialize.ts`, route into `App.tsx`.
 
 **Tasks:**
-- [ ] Author `levels/01.json` … `10.json` per SPEC §7 progression.
-- [ ] Dev-only level loader: jump to any level via URL hash (`#level=05`).
-- [ ] Difficulty pass: solve each, tune.
-- [ ] *(Conditional on Q4)* In-app level editor.
+- [ ] Decide editor entry point: dev-only route (`#editor`) vs. always-on. *(Default: dev-only via URL hash.)*
+- [ ] Editor UI:
+  - [ ] Adjustable grid size.
+  - [ ] Click empty cell to add wall; click wall to remove.
+  - [ ] Pick a color + a shape from a palette, click cells to place a block; click a block to delete.
+  - [ ] Click an edge cell to add/edit a door (color + width).
+- [ ] `engine/levelSerialize.ts`: `serialize(EngineState) → Level JSON` (the inverse of `levelLoader.parse`).
+- [ ] "Test play" button: load the in-progress level into the game scene.
+- [ ] Export to clipboard / download as JSON.
+- [ ] Import existing JSON to edit.
 
-**DoD:** SPEC §9 satisfied — 10 ordered levels, snappy on phone, <3s load, runs in current Chrome / Safari / Firefox.
+**DoD:** can build, test-play, and export a 3-block, 2-door level end-to-end without touching JSON by hand.
+
+---
+
+## Slice 7 — Author the 10 levels
+
+**Goal:** ship.
+
+**Tasks:**
+- [ ] Author `levels/01.json` … `10.json` using the Slice 6 editor, following SPEC §7 progression.
+- [ ] Difficulty pass: solve each, tune.
+- [ ] Wire authored levels into the picker (Slice 5).
+- [ ] Final QA: SPEC §9 checklist (load time, browsers, mobile snappiness).
+
+**DoD:** SPEC §9 satisfied — 10 ordered levels playable from the picker, snappy on phone, <3s load, runs in current Chrome / Safari / Firefox.
