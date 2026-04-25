@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 2 (R3F scene + drag) ✅ wired and builds clean — needs human in-browser verification of drag feel. Slice 3 ready to start once drag is confirmed working.
+**Current status:** Slice 3 (doors + exits) ✅ wired — 46 tests green, dev level is winnable. Needs human in-browser verification of door visuals + exit animation. Slice 4 (chunky look) ready next.
 
 ---
 
@@ -27,6 +27,7 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 - **2026-04-25 — Build a level editor tool.** SPEC §7 calls this out as worth doing early; we'll build it *before* authoring the 10 MVP levels so authoring is fast.
 - **2026-04-25 — Test runner: `bun:test`.** Built-in, zero install, faster than vitest. Swap to vitest later (e.g. for `neotest-vitest` integration) is a ~30-min job since engine is plain TS.
 - **2026-04-25 — `commitMove` belongs in `moveResolver.ts`.** Snaps a finalized drag to integer cells (or removes the block on exit) and produces a new `EngineState`. Added during Slice 1 because "loadLevel → resolveDrag end-to-end" implies somewhere has to apply the result; keeping the snap in the engine keeps the store in Slice 2 a thin wrapper.
+- **2026-04-25 — `commitMove` walks back to fully-in-bounds when releasing mid-door.** A multi-cell block dragged partway through a door and then released would otherwise snap to a position with some cells out-of-bounds (since `resolveDrag` accepts in-bounds *and* through-door positions during a drag). The snap-back walks dx/dy toward (0, 0) on the dominant axis until every cell is in-bounds.
 
 ---
 
@@ -80,20 +81,21 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 
 ---
 
-## Slice 3 — Doors & exits
+## Slice 3 — Doors & exits ✅
 
 **Goal:** levels are completable.
 
-**Files:** `engine/moveResolver.ts` (door logic exercised), `scene/DoorMesh.tsx`, `state/gameStore.ts`, `scene/GameScene.tsx`.
+**Files:** `engine/moveResolver.ts` (snap-back + tests), `scene/DoorMesh.tsx`, `scene/BlockMesh.tsx` (adds `ExitingBlockMesh`), `state/gameStore.ts`, `scene/GameScene.tsx`, `App.tsx`.
 
 **Tasks:**
-- [ ] Verify door-fit logic from Slice 1 against a level with mixed-color doors.
-- [ ] `DoorMesh`: colored tab protruding from board edge at `(side, position, width)`.
-- [ ] Store: when `resolveDrag` returns `exited: true`, remove block, push to history, check win → `status: 'won'`.
-- [ ] Visual exit: block lerps off-board, scales to 0, fades. Visual only — engine state already removed it.
-- [ ] Engine tests: 2-block 2-door level, multi-block-same-color-same-door.
+- [x] Verify door-fit logic from Slice 1 against a level with mixed-color doors. (4 new tests: mixed-color exits, mismatched-color blocked, multi-block-same-color sequential exits, partial-exit snap-back.)
+- [x] `DoorMesh`: colored tab protruding from board edge at `(side, position, width)`.
+- [x] Store: when `resolveDrag` returns `exited: true`, remove block, push to history, derive `status: 'playing' | 'won'` from `Object.keys(state.blocks).length`.
+- [x] Visual exit: an `ExitingBlockMesh` keeps the block visible while it lerps off-board, scales to 0, and fades over 450 ms. Engine state has already removed it.
+- [x] Engine tests: 2-block 2-door level, multi-block-same-color-same-door, partial-exit-then-release.
+- [x] Replaced dev level in `App.tsx` with a 3-block 2-door winnable layout (5×5, jade door top, crimson door right, one wall).
 
-**DoD:** play a hand-coded 3-block 2-door level start to "won".
+**DoD:** play a hand-coded 3-block 2-door level start to "won". ⚠️ Engine + store say so (status flips to `'won'` once `state.blocks` empties); needs human in-browser confirmation that doors render in the right spots and the exit animation looks right.
 
 ---
 

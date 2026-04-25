@@ -68,7 +68,9 @@ export function resolveDrag(
 }
 
 // Apply a finalized drag to produce a new EngineState. Snaps to the nearest
-// grid cell; removes the block entirely when it has exited.
+// grid cell; removes the block entirely when it has exited. If the snap
+// position would leave any cell out of bounds (e.g. user released mid-door),
+// walks back along the dominant axis until every cell is in bounds.
 export function commitMove(
   state: EngineState,
   blockId: BlockId,
@@ -81,15 +83,39 @@ export function commitMove(
   const nextBlocks = { ...state.blocks };
   if (exited) {
     delete nextBlocks[blockId];
-  } else {
-    const dx = Math.round(delta.x);
-    const dy = Math.round(delta.y);
-    nextBlocks[blockId] = {
-      ...block,
-      cells: block.cells.map((c) => ({ x: c.x + dx, y: c.y + dy })),
-    };
+    return { ...state, blocks: nextBlocks };
   }
+
+  let dx = Math.round(delta.x);
+  let dy = Math.round(delta.y);
+  while (!cellsAllInBounds(block, dx, dy, state.gridWidth, state.gridHeight)) {
+    if (dx === 0 && dy === 0) break;
+    if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) {
+      dx += dx > 0 ? -1 : 1;
+    } else {
+      dy += dy > 0 ? -1 : 1;
+    }
+  }
+  nextBlocks[blockId] = {
+    ...block,
+    cells: block.cells.map((c) => ({ x: c.x + dx, y: c.y + dy })),
+  };
   return { ...state, blocks: nextBlocks };
+}
+
+function cellsAllInBounds(
+  block: Block,
+  dx: number,
+  dy: number,
+  width: number,
+  height: number,
+): boolean {
+  for (const c of block.cells) {
+    const nx = c.x + dx;
+    const ny = c.y + dy;
+    if (nx < 0 || nx >= width || ny < 0 || ny >= height) return false;
+  }
+  return true;
 }
 
 function isPositionValid(

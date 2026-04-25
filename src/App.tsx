@@ -5,22 +5,29 @@ import { useGameStore } from './game/state/gameStore';
 import type { Level } from './game/engine/types';
 import './App.css';
 
-// Slice 2 test level: a few blocks, a wall divider, no doors yet.
+// Slice 3 sandbox — exercises the door-fit rule with four shapes:
+//   • horizontal 1×3 jade   → exits top through a 3-wide door
+//   • vertical 3×1 crimson  → exits right through a 3-tall door
+//   • 2×2 gold square       → exits bottom through a 2-wide door
+//   • single cyan cell      → exits left through a 1-tall door
 const DEV_LEVEL: Level = {
-  id: 'dev-2',
-  name: 'Slice 2 sandbox',
-  gridWidth: 6,
-  gridHeight: 8,
+  id: 'dev-3',
+  name: 'Slice 3 sandbox',
+  gridWidth: 5,
+  gridHeight: 5,
   blocks: [
-    { id: 'a', color: 'rare-blue', cells: [[1, 1], [2, 1]] },
-    { id: 'b', color: 'crimson', cells: [[4, 5]] },
-    { id: 'c', color: 'jade', cells: [[0, 6], [1, 6], [1, 7]] },
+    { id: 'jade-row',     color: 'jade',           cells: [[0, 0], [1, 0], [2, 0]] },
+    { id: 'crimson-col',  color: 'crimson',        cells: [[4, 1], [4, 2], [4, 3]] },
+    { id: 'gold-square',  color: 'legendary-gold', cells: [[0, 3], [1, 3], [0, 4], [1, 4]] },
+    { id: 'cyan-cell',    color: 'frost-cyan',     cells: [[0, 2]] },
   ],
-  doors: [],
-  walls: [
-    [3, 3],
-    [3, 4],
+  doors: [
+    { side: 'top',    position: 0, width: 3, color: 'jade' },
+    { side: 'right',  position: 1, width: 3, color: 'crimson' },
+    { side: 'bottom', position: 0, width: 2, color: 'legendary-gold' },
+    { side: 'left',   position: 2, width: 1, color: 'frost-cyan' },
   ],
+  walls: [],
 };
 
 function App() {

@@ -282,3 +282,89 @@ describe('end-to-end: loadLevel → resolveDrag → commitMove', () => {
     expect(Object.keys(next.blocks)).toHaveLength(0);
   });
 });
+
+describe('Slice 3 — multi-door levels', () => {
+  test('mixed-color doors: each block exits through its matching door', () => {
+    const state = makeState({
+      width: 4,
+      height: 4,
+      blocks: [
+        { id: 'r', color: 'crimson', cells: [[0, 0]] },
+        { id: 'b', color: 'rare-blue', cells: [[3, 3]] },
+      ],
+      doors: [
+        { side: 'top', position: 0, width: 1, color: 'crimson' },
+        { side: 'bottom', position: 3, width: 1, color: 'rare-blue' },
+      ],
+    });
+    // Crimson out the top.
+    const r1 = resolveDrag(state, 'r', { x: 0, y: -5 });
+    expect(r1.exited).toBe(true);
+    // Rare-blue out the bottom.
+    const r2 = resolveDrag(state, 'b', { x: 0, y: 5 });
+    expect(r2.exited).toBe(true);
+  });
+
+  test("a block does not exit through a door of a different color", () => {
+    const state = makeState({
+      width: 3,
+      height: 3,
+      blocks: [{ id: 'r', color: 'crimson', cells: [[1, 0]] }],
+      doors: [
+        // Right column has the only top door, and it is the wrong color.
+        { side: 'top', position: 1, width: 1, color: 'rare-blue' },
+      ],
+    });
+    const r = resolveDrag(state, 'r', { x: 0, y: -5 });
+    expect(r.exited).toBe(false);
+  });
+
+  test('two same-color blocks both exit through the same door, sequentially', () => {
+    let state = makeState({
+      width: 3,
+      height: 3,
+      blocks: [
+        { id: 'a', color: 'jade', cells: [[1, 0]] },
+        { id: 'b', color: 'jade', cells: [[1, 1]] },
+      ],
+      doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
+    });
+    const r1 = resolveDrag(state, 'a', { x: 0, y: -5 });
+    expect(r1.exited).toBe(true);
+    state = commitMove(state, 'a', r1.delta, r1.exited);
+    expect(state.blocks.a).toBeUndefined();
+
+    const r2 = resolveDrag(state, 'b', { x: 0, y: -5 });
+    expect(r2.exited).toBe(true);
+    state = commitMove(state, 'b', r2.delta, r2.exited);
+    expect(Object.keys(state.blocks)).toHaveLength(0);
+  });
+});
+
+describe('Slice 3 — partial-exit-then-release snap-back', () => {
+  test('a 3-tall block half-through a top door snaps back inside on release', () => {
+    const state = makeState({
+      width: 3,
+      height: 5,
+      blocks: [
+        {
+          id: 'b',
+          color: 'jade',
+          cells: [[1, 0], [1, 1], [1, 2]],
+        },
+      ],
+      doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
+    });
+    // Drag part-way out: top cell crosses the door, bottom cells still inside.
+    const r = resolveDrag(state, 'b', { x: 0, y: -1.6 });
+    expect(r.exited).toBe(false);
+    // Without snap-back, rounded delta y = -2 would put the top cell at y = -2.
+    const next = commitMove(state, 'b', r.delta, r.exited);
+    for (const c of next.blocks.b.cells) {
+      expect(c.x).toBeGreaterThanOrEqual(0);
+      expect(c.x).toBeLessThan(3);
+      expect(c.y).toBeGreaterThanOrEqual(0);
+      expect(c.y).toBeLessThan(5);
+    }
+  });
+});
