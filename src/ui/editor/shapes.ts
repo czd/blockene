@@ -1,10 +1,10 @@
 export type EditorTool =
   | 'wall'
   | 'block'
-  | 'door-top'
-  | 'door-right'
-  | 'door-bottom'
-  | 'door-left';
+  | 'gate-top'
+  | 'gate-right'
+  | 'gate-bottom'
+  | 'gate-left';
 
 export type Shape = { name: string; cells: [number, number][] };
 

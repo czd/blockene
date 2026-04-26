@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 6 (level editor) ✅ wired — `#editor` route, click-to-place tools (wall / block + shape / 4 door sides), import/export JSON, test-play loop. Slice 7 (author the 10 levels) is the last one.
+**Current status:** Slice 6 (level editor) ✅ wired — `#editor` route, click-to-place tools (wall / block + shape / 4 gate sides), import/export JSON, test-play loop. Slice 7 (author the 10 levels) is the last one.
 
 ---
 
@@ -27,13 +27,13 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 - **2026-04-25 — Build a level editor tool.** SPEC §7 calls this out as worth doing early; we'll build it *before* authoring the 10 MVP levels so authoring is fast.
 - **2026-04-25 — Test runner: `bun:test`.** Built-in, zero install, faster than vitest. Swap to vitest later (e.g. for `neotest-vitest` integration) is a ~30-min job since engine is plain TS.
 - **2026-04-25 — `commitMove` belongs in `moveResolver.ts`.** Snaps a finalized drag to integer cells (or removes the block on exit) and produces a new `EngineState`. Added during Slice 1 because "loadLevel → resolveDrag end-to-end" implies somewhere has to apply the result; keeping the snap in the engine keeps the store in Slice 2 a thin wrapper.
-- **2026-04-25 — `commitMove` walks back to fully-in-bounds when releasing mid-door.** A multi-cell block dragged partway through a door and then released would otherwise snap to a position with some cells out-of-bounds (since `resolveDrag` accepts in-bounds *and* through-door positions during a drag). The snap-back walks dx/dy toward (0, 0) on the dominant axis until every cell is in-bounds.
+- **2026-04-25 — `commitMove` walks back to fully-in-bounds when releasing mid-gate.** A multi-cell block dragged partway through a gate and then released would otherwise snap to a position with some cells out-of-bounds (since `resolveDrag` accepts in-bounds *and* through-gate positions during a drag). The snap-back walks dx/dy toward (0, 0) on the dominant axis until every cell is in-bounds.
 
 ---
 
 ## Cross-cutting decisions
 
-- **Shared types:** `src/game/engine/types.ts` — `Color`, `BlockId`, `Cell`, `Block`, `Door`, `Wall`, `Level`, `EngineState`. Imported by `scene/`, `state/`, `input/`. Engine never imports from above.
+- **Shared types:** `src/game/engine/types.ts` — `Color`, `BlockId`, `Cell`, `Block`, `Gate`, `Wall`, `Level`, `EngineState`. Imported by `scene/`, `state/`, `input/`. Engine never imports from above.
 - **Color palette split:** logical names (`'rare-blue'`, `'epic-purple'`, …) in `engine/types.ts`; hex map + side/highlight shades in `scene/palette.ts`. Engine never sees hex.
 - **Animations:** start with manual `useFrame` lerps + already-installed `@tweenjs/tween.js`. Don't add `react-spring` unless we hit a wall.
 - **Forward-compat:** every `Block` carries `type: 'normal'` + `modifiers: []` from day one (SPEC §8 deferred features).
@@ -53,11 +53,11 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 - [x] `moveResolver.resolveDrag(state, blockId, desiredDeltaWorld)`:
   - [x] Sub-cell stepping at 0.1 units; per step check overlap with walls / blocks / edges.
   - [x] On block, decompose into axis components and try each — wall-slide.
-  - [x] Door-aware edge: step crosses a board edge only if `door.color === block.color && extent fits door.width`.
+  - [x] Gate-aware edge: step crosses a board edge only if `gate.color === block.color && extent fits gate.width`.
   - [x] Returns final sub-cell position + `{ exited: boolean }`.
 - [x] `moveResolver.commitMove(state, blockId, delta, exited)` — snaps to grid or removes the block on exit (see Decisions).
 - [x] `levelLoader.parse(json)` → `EngineState`.
-- [x] Tests: cell-aligned move, blocked-by-wall, blocked-by-block, diagonal-into-corner slides, fast-flick no-tunneling, door-match exits, door-mismatch blocks, door-too-narrow blocks.
+- [x] Tests: cell-aligned move, blocked-by-wall, blocked-by-block, diagonal-into-corner slides, fast-flick no-tunneling, gate-match exits, gate-mismatch blocks, gate-too-narrow blocks.
 
 **DoD:** `bun test` green; `loadLevel(json) → resolveDrag(...)` works end-to-end with **zero** React/Three.js imports anywhere in `engine/`. ✅ Met — 42 tests pass, `tsc -b` clean, `eslint` clean, no rendering imports anywhere in `engine/`.
 
@@ -75,27 +75,27 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 - [x] `BoardMesh`: dark slate frame + base + per-cell tiles (gaps read as grid lines), wall cubes raised above the surface.
 - [x] `BlockMesh`: per-block group, one rounded-ish cube per cell, base color from `scene/palette.ts`. (Studs / three-tone material come in Slice 4.)
 - [x] `useDragControls`: window-level `pointermove`/`pointerup` listeners that raycast onto the z = 0 board plane and feed grid-space deltas into the store. `BlockMesh.onPointerDown` calls `beginDrag(blockId)` and the hook captures the start world position on the first pointermove (one-frame warmup; invisible in practice).
-- [x] Hard-code one test level inline in `App.tsx` (3 blocks, 2 walls, no doors).
+- [x] Hard-code one test level inline in `App.tsx` (3 blocks, 2 walls, no gates).
 
-**DoD:** drag a block around a wall, slide diagonally into a corner, release and snap. No doors yet. ⚠️ Build is clean (`tsc -b`, `eslint`, `vite build`, `bun test` all green; dev server boots and serves all transformed modules) but **actual drag feel needs human in-browser verification** — I can't test pointer interaction headlessly.
+**DoD:** drag a block around a wall, slide diagonally into a corner, release and snap. No gates yet. ⚠️ Build is clean (`tsc -b`, `eslint`, `vite build`, `bun test` all green; dev server boots and serves all transformed modules) but **actual drag feel needs human in-browser verification** — I can't test pointer interaction headlessly.
 
 ---
 
-## Slice 3 — Doors & exits ✅
+## Slice 3 — Gates & exits ✅
 
 **Goal:** levels are completable.
 
-**Files:** `engine/moveResolver.ts` (snap-back + tests), `scene/DoorMesh.tsx`, `scene/BlockMesh.tsx` (adds `ExitingBlockMesh`), `state/gameStore.ts`, `scene/GameScene.tsx`, `App.tsx`.
+**Files:** `engine/moveResolver.ts` (snap-back + tests), `scene/GateMesh.tsx`, `scene/BlockMesh.tsx` (adds `ExitingBlockMesh`), `state/gameStore.ts`, `scene/GameScene.tsx`, `App.tsx`.
 
 **Tasks:**
-- [x] Verify door-fit logic from Slice 1 against a level with mixed-color doors. (4 new tests: mixed-color exits, mismatched-color blocked, multi-block-same-color sequential exits, partial-exit snap-back.)
-- [x] `DoorMesh`: colored tab protruding from board edge at `(side, position, width)`.
+- [x] Verify gate-fit logic from Slice 1 against a level with mixed-color gates. (4 new tests: mixed-color exits, mismatched-color blocked, multi-block-same-color sequential exits, partial-exit snap-back.)
+- [x] `GateMesh`: colored tab protruding from board edge at `(side, position, width)`.
 - [x] Store: when `resolveDrag` returns `exited: true`, remove block, push to history, derive `status: 'playing' | 'won'` from `Object.keys(state.blocks).length`.
 - [x] Visual exit: an `ExitingBlockMesh` keeps the block visible while it lerps off-board, scales to 0, and fades over 450 ms. Engine state has already removed it.
-- [x] Engine tests: 2-block 2-door level, multi-block-same-color-same-door, partial-exit-then-release.
-- [x] Replaced dev level in `App.tsx` with a 3-block 2-door winnable layout (5×5, jade door top, crimson door right, one wall).
+- [x] Engine tests: 2-block 2-gate level, multi-block-same-color-same-gate, partial-exit-then-release.
+- [x] Replaced dev level in `App.tsx` with a 3-block 2-gate winnable layout (5×5, jade gate top, crimson gate right, one wall).
 
-**DoD:** play a hand-coded 3-block 2-door level start to "won". ⚠️ Engine + store say so (status flips to `'won'` once `state.blocks` empties); needs human in-browser confirmation that doors render in the right spots and the exit animation looks right.
+**DoD:** play a hand-coded 3-block 2-gate level start to "won". ⚠️ Engine + store say so (status flips to `'won'` once `state.blocks` empties); needs human in-browser confirmation that gates render in the right spots and the exit animation looks right.
 
 ---
 
@@ -153,13 +153,13 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
   - [x] Adjustable grid size (3-12 wide × 3-14 tall, content outside new bounds is dropped on shrink).
   - [x] Click an empty cell with the Wall tool to add; click a wall to remove. Walls under blocks are blocked.
   - [x] Block tool with color + shape palette (1×1, 2×1, 1×2, 3×1, 1×3, 2×2, L). Click empty cells to place; click a block to delete.
-  - [x] Four door tools (one per side). Door width is configurable in the toolbar; clicking an existing door cell removes it.
+  - [x] Four gate tools (one per side). Gate width is configurable in the toolbar; clicking an existing gate cell removes it.
 - [x] `engine/levelSerialize.ts`: `serialize(EngineState, id, name) → Level`, plus `emptyState`, `nextBlockId`, `resize`. Round-trip test confirms `parse ∘ serialize = id`.
 - [x] "Test play" button: serializes the current state and loads it into the game scene; HUD's Back returns to the editor with state preserved.
 - [x] Export: copies the JSON to clipboard (falls back to a `prompt()` if the browser blocks `navigator.clipboard`).
 - [x] Import: reads a JSON paste, populates the editor.
 
-**DoD:** can build, test-play, and export a 3-block, 2-door level end-to-end without touching JSON by hand. ⚠️ Pipeline works end-to-end on engine + render; needs human in-browser verification of the click ergonomics.
+**DoD:** can build, test-play, and export a 3-block, 2-gate level end-to-end without touching JSON by hand. ⚠️ Pipeline works end-to-end on engine + render; needs human in-browser verification of the click ergonomics.
 
 ---
 

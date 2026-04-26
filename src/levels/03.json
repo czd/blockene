@@ -63,7 +63,7 @@
       ]
     }
   ],
-  "doors": [
+  "gates": [
     {
       "side": "bottom",
       "position": 1,

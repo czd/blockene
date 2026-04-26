@@ -13,7 +13,7 @@ export function serialize(state: EngineState, id: string, name: string): Level {
       color: b.color,
       cells: b.cells.map((c) => [c.x, c.y] as [number, number]),
     })),
-    doors: state.doors.map((d) => ({ ...d })),
+    gates: state.gates.map((d) => ({ ...d })),
     walls: state.walls.map((w) => [w.x, w.y] as [number, number]),
   };
 }
@@ -25,7 +25,7 @@ export function emptyState(gridWidth: number, gridHeight: number): EngineState {
     gridWidth,
     gridHeight,
     blocks: {},
-    doors: [],
+    gates: [],
     walls: [],
   };
 }
@@ -53,10 +53,10 @@ export function resize(state: EngineState, gridWidth: number, gridHeight: number
 
   const walls: Wall[] = state.walls.filter((w) => inBounds(w.x, w.y));
 
-  const doors = state.doors.filter((d) => {
+  const gates = state.gates.filter((d) => {
     const span = d.side === 'top' || d.side === 'bottom' ? gridWidth : gridHeight;
     return d.position >= 0 && d.position + d.width <= span;
   });
 
-  return { gridWidth, gridHeight, blocks, doors, walls };
+  return { gridWidth, gridHeight, blocks, gates, walls };
 }

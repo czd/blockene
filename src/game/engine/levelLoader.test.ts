@@ -11,7 +11,7 @@ const sample: Level = {
   blocks: [
     { id: 'b1', color: 'rare-blue', cells: [[1, 2], [2, 2], [1, 3]] },
   ],
-  doors: [
+  gates: [
     { side: 'top', position: 2, width: 3, color: 'rare-blue' },
   ],
   walls: [[3, 5]],
@@ -45,10 +45,10 @@ describe('levelLoader.parse', () => {
     expect(s.walls).toEqual([{ x: 3, y: 5 }]);
   });
 
-  test('doors are passed through unchanged', () => {
+  test('gates are passed through unchanged', () => {
     const s = parse(sample);
-    expect(s.doors).toHaveLength(1);
-    expect(s.doors[0]).toEqual({
+    expect(s.gates).toHaveLength(1);
+    expect(s.gates[0]).toEqual({
       side: 'top',
       position: 2,
       width: 3,

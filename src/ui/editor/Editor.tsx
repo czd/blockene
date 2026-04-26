@@ -7,7 +7,7 @@ import {
   resize as resizeState,
   serialize,
 } from '../../game/engine/levelSerialize';
-import type { Block, Cell, Color, Door, EngineState, Side } from '../../game/engine/types';
+import type { Block, Cell, Color, Gate, EngineState, Side } from '../../game/engine/types';
 
 import { EditorScene } from './EditorScene';
 import type { EditorSceneHandle } from './EditorScene';
@@ -63,8 +63,8 @@ export function Editor({
   const [color, setColor] = useState<Color>('jade');
   const [rotation, setRotation] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [doorSide, setDoorSide] = useState<Side>('top');
-  const [doorWidth, setDoorWidth] = useState(1);
+  const [gateSide, setGateSide] = useState<Side>('top');
+  const [gateWidth, setGateWidth] = useState(1);
 
   const [drag, setDrag] = useState<DragState | null>(null);
   // Tracks a "maybe a click on a block" — promotes to drag-move once the
@@ -172,18 +172,18 @@ export function Editor({
 
   const handleCanvasClick = useCallback(
     (worldX: number, worldY: number) => {
-      // Only used for click-painting walls and doors. Block placement is now
+      // Only used for click-painting walls and gates. Block placement is now
       // drag-based; block deletion happens via the block-mesh pointerdown +
       // pointerup-without-movement path.
       const gx = Math.floor(worldX);
       const gy = Math.floor(-worldY);
       if (mode === 'walls') {
         setState((prev) => toggleWall(prev, { x: gx, y: gy }));
-      } else if (mode === 'doors') {
-        setState((prev) => toggleDoor(prev, { x: gx, y: gy }, doorSide, color, doorWidth));
+      } else if (mode === 'gates') {
+        setState((prev) => toggleGate(prev, { x: gx, y: gy }, gateSide, color, gateWidth));
       }
     },
-    [mode, color, doorSide, doorWidth],
+    [mode, color, gateSide, gateWidth],
   );
 
   const handleResize = (w: number, h: number) => {
@@ -222,7 +222,7 @@ export function Editor({
         };
       }
       next.walls = (parsed.walls ?? []).map(([x, y]: [number, number]) => ({ x, y }));
-      next.doors = (parsed.doors ?? []).map((d: Door) => ({ ...d }));
+      next.gates = (parsed.gates ?? []).map((d: Gate) => ({ ...d }));
       setState(next);
       setMeta({ id: parsed.id ?? meta.id, name: parsed.name ?? meta.name });
     } catch (err) {
@@ -240,16 +240,16 @@ export function Editor({
         color={color}
         rotation={rotation}
         flipped={flipped}
-        doorSide={doorSide}
-        doorWidth={doorWidth}
+        gateSide={gateSide}
+        gateWidth={gateWidth}
         gridWidth={state.gridWidth}
         gridHeight={state.gridHeight}
         onModeChange={setMode}
         onColorChange={setColor}
         onRotate={() => setRotation((r) => (r + 1) % 4)}
         onFlip={() => setFlipped((f) => !f)}
-        onDoorSideChange={setDoorSide}
-        onDoorWidthChange={setDoorWidth}
+        onGateSideChange={setGateSide}
+        onGateWidthChange={setGateWidth}
         onResize={handleResize}
         onClear={handleClear}
         onTestPlay={() => onTestPlay(state, meta)}
@@ -423,7 +423,7 @@ function toggleWall(state: EngineState, c: Cell): EngineState {
   return { ...state, walls: [...state.walls, c] };
 }
 
-function toggleDoor(
+function toggleGate(
   state: EngineState,
   c: Cell,
   side: Side,
@@ -434,16 +434,16 @@ function toggleDoor(
   const position = side === 'top' || side === 'bottom' ? c.x : c.y;
   if (position < 0 || position >= span) return state;
 
-  const existing = state.doors.findIndex(
+  const existing = state.gates.findIndex(
     (d) => d.side === side && position >= d.position && position < d.position + d.width,
   );
   if (existing >= 0) {
-    const doors = [...state.doors];
-    doors.splice(existing, 1);
-    return { ...state, doors };
+    const gates = [...state.gates];
+    gates.splice(existing, 1);
+    return { ...state, gates };
   }
 
   const w = Math.max(1, Math.min(width, span - position));
-  const door: Door = { side, position, width: w, color };
-  return { ...state, doors: [...state.doors, door] };
+  const gate: Gate = { side, position, width: w, color };
+  return { ...state, gates: [...state.gates, gate] };
 }

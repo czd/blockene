@@ -19,7 +19,7 @@ function makeState(): EngineState {
         modifiers: [],
       },
     },
-    doors: [],
+    gates: [],
     walls: [{ x: 0, y: 0 }],
   };
 }

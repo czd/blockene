@@ -7,7 +7,7 @@
     { "id": "a", "color": "jade", "cells": [[0, 3]] },
     { "id": "b", "color": "crimson", "cells": [[3, 3]] }
   ],
-  "doors": [
+  "gates": [
     { "side": "right", "position": 3, "width": 1, "color": "jade" },
     { "side": "left", "position": 3, "width": 1, "color": "crimson" }
   ],

@@ -1,5 +1,5 @@
 import { Grid } from './Grid';
-import type { Block, BlockId, Door, EngineState, Side, Vec2 } from './types';
+import type { Block, BlockId, Gate, EngineState, Side, Vec2 } from './types';
 
 const STEP_SIZE = 0.1;
 const EPS = 1e-9;
@@ -15,9 +15,9 @@ type StepOutcome = 'valid' | 'blocked' | { exit: Side };
 
 // Resolve a drag from `fromDelta` (the block's current sub-cell offset, or
 // (0, 0) at drag start) toward `desiredDelta`. Walks in 0.1-unit sub-steps,
-// supports wall-sliding on either axis. Doors are *triggers*, not openings:
+// supports wall-sliding on either axis. Gates are *triggers*, not openings:
 // the block collides with the board edge like a wall, but a step that would
-// push it past the edge through a matching door instead reports `exited`.
+// push it past the edge through a matching gate instead reports `exited`.
 //
 // During a continuous drag the caller should pass the previous resolved delta
 // as `fromDelta`. Walking from the *origin* on every pointermove means a
@@ -51,7 +51,7 @@ export function resolveDrag(
     const sx = remX * factor;
     const sy = remY * factor;
 
-    const full = tryStep(block, grid, state.doors, curX + sx, curY + sy);
+    const full = tryStep(block, grid, state.gates, curX + sx, curY + sy);
     if (full === 'valid') {
       curX += sx;
       curY += sy;
@@ -64,11 +64,11 @@ export function resolveDrag(
     }
 
     // Diagonal step blocked. Try axis-aligned slides; an exit on either axis
-    // counts too if the block is squarely lined up with a matching door.
+    // counts too if the block is squarely lined up with a matching gate.
     const xStep =
-      Math.abs(sx) > EPS ? tryStep(block, grid, state.doors, curX + sx, curY) : 'blocked';
+      Math.abs(sx) > EPS ? tryStep(block, grid, state.gates, curX + sx, curY) : 'blocked';
     const yStep =
-      Math.abs(sy) > EPS ? tryStep(block, grid, state.doors, curX, curY + sy) : 'blocked';
+      Math.abs(sy) > EPS ? tryStep(block, grid, state.gates, curX, curY + sy) : 'blocked';
 
     if (xStep === 'valid') {
       curX += sx;
@@ -142,16 +142,16 @@ function cellsAllInBounds(
 // Classify a candidate sub-cell position. Three outcomes:
 //   - 'valid'   : every cell is in bounds and free
 //   - { exit }  : at least one cell is out of bounds, all out-of-bounds
-//                 cells leave through the same matching door, the block's
-//                 perpendicular extent fits the door, AND the gate-facing
+//                 cells leave through the same matching gate, the block's
+//                 perpendicular extent fits the gate, AND the gate-facing
 //                 empty cells of the bounding box at the pre-exit position
 //                 are clear (so a polyomino like a T can't wedge its stem
 //                 through if another block is sitting in the gap)
-//   - 'blocked' : anything else (wall hit, mismatched door, corner overhang…)
+//   - 'blocked' : anything else (wall hit, mismatched gate, corner overhang…)
 function tryStep(
   block: Block,
   grid: Grid,
-  doors: Door[],
+  gates: Gate[],
   dx: number,
   dy: number,
 ): StepOutcome {
@@ -169,7 +169,7 @@ function tryStep(
     }
   }
   if (outSide === null) return 'valid';
-  if (!doorAllowsExit(block, doors, outSide, dx, dy)) return 'blocked';
+  if (!gateAllowsExit(block, gates, outSide, dx, dy)) return 'blocked';
   if (!exitRampClear(block, grid, outSide, dx, dy)) return 'blocked';
   return { exit: outSide };
 }
@@ -247,9 +247,9 @@ function sideForOutOfBounds(
   return 'right';
 }
 
-function doorAllowsExit(
+function gateAllowsExit(
   block: Block,
-  doors: Door[],
+  gates: Gate[],
   side: Side,
   dx: number,
   dy: number,
@@ -262,9 +262,9 @@ function doorAllowsExit(
     if (v < min) min = v;
     if (v > max) max = v;
   }
-  for (const door of doors) {
-    if (door.side !== side || door.color !== block.color) continue;
-    if (min >= door.position && max <= door.position + door.width - 1) return true;
+  for (const gate of gates) {
+    if (gate.side !== side || gate.color !== block.color) continue;
+    if (min >= gate.position && max <= gate.position + gate.width - 1) return true;
   }
   return false;
 }

@@ -9,7 +9,7 @@
     { "id": "c", "color": "epic-purple", "cells": [[0, 5]] },
     { "id": "d", "color": "legendary-gold", "cells": [[5, 5]] }
   ],
-  "doors": [
+  "gates": [
     { "side": "top", "position": 0, "width": 1, "color": "jade" },
     { "side": "right", "position": 0, "width": 1, "color": "crimson" },
     { "side": "left", "position": 5, "width": 1, "color": "epic-purple" },

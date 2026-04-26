@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import { loadLevel } from './levelLoader';
 import { commitMove, resolveDrag } from './moveResolver';
-import type { Block, Color, Door, EngineState, Level } from './types';
+import type { Block, Color, Gate, EngineState, Level } from './types';
 
 type BlockSpec = { id: string; color: Color; cells: [number, number][] };
 
@@ -11,7 +11,7 @@ function makeState(opts: {
   height: number;
   blocks?: BlockSpec[];
   walls?: [number, number][];
-  doors?: Door[];
+  gates?: Gate[];
 }): EngineState {
   const blocks: Record<string, Block> = {};
   for (const b of opts.blocks ?? []) {
@@ -28,7 +28,7 @@ function makeState(opts: {
     gridHeight: opts.height,
     blocks,
     walls: (opts.walls ?? []).map(([x, y]) => ({ x, y })),
-    doors: opts.doors ?? [],
+    gates: opts.gates ?? [],
   };
 }
 
@@ -93,7 +93,7 @@ describe('resolveDrag — obstacles', () => {
     expect(r.delta.x).toBeGreaterThan(1.3);
   });
 
-  test('blocked by board edge with no door', () => {
+  test('blocked by board edge with no gate', () => {
     const state = makeState({
       width: 3,
       height: 3,
@@ -154,13 +154,13 @@ describe('resolveDrag — no tunneling', () => {
   });
 });
 
-describe('resolveDrag — doors', () => {
+describe('resolveDrag — gates', () => {
   test('matching color and width: block exits', () => {
     const state = makeState({
       width: 3,
       height: 3,
       blocks: [{ id: 'b1', color: 'jade', cells: [[1, 0]] }],
-      doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
+      gates: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
     });
     const r = resolveDrag(state, 'b1', { x: 0, y: -2 });
     expect(r.exited).toBe(true);
@@ -171,7 +171,7 @@ describe('resolveDrag — doors', () => {
       width: 3,
       height: 3,
       blocks: [{ id: 'b1', color: 'jade', cells: [[1, 0]] }],
-      doors: [{ side: 'top', position: 1, width: 1, color: 'crimson' }],
+      gates: [{ side: 'top', position: 1, width: 1, color: 'crimson' }],
     });
     const r = resolveDrag(state, 'b1', { x: 0, y: -2 });
     expect(r.exited).toBe(false);
@@ -180,48 +180,48 @@ describe('resolveDrag — doors', () => {
     expect(r.delta.y).toBeGreaterThanOrEqual(-0.5);
   });
 
-  test('door too narrow for the block: blocked', () => {
-    // 2-wide horizontal block facing a 1-wide top door.
+  test('gate too narrow for the block: blocked', () => {
+    // 2-wide horizontal block facing a 1-wide top gate.
     const state = makeState({
       width: 4,
       height: 3,
       blocks: [{ id: 'b1', color: 'jade', cells: [[1, 0], [2, 0]] }],
-      doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
+      gates: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
     });
     const r = resolveDrag(state, 'b1', { x: 0, y: -2 });
     expect(r.exited).toBe(false);
   });
 
-  test('door not aligned with block column: blocked', () => {
+  test('gate not aligned with block column: blocked', () => {
     const state = makeState({
       width: 3,
       height: 3,
       blocks: [{ id: 'b1', color: 'jade', cells: [[0, 0]] }],
-      doors: [{ side: 'top', position: 2, width: 1, color: 'jade' }],
+      gates: [{ side: 'top', position: 2, width: 1, color: 'jade' }],
     });
     const r = resolveDrag(state, 'b1', { x: 0, y: -2 });
     expect(r.exited).toBe(false);
   });
 
-  test('vertical line through left door: 1-wide door is enough', () => {
-    // Vertical 1×3 block — its perpendicular extent against a left door is 3,
-    // so it needs a 3-wide left door.
+  test('vertical line through left gate: 1-wide gate is enough', () => {
+    // Vertical 1×3 block — its perpendicular extent against a left gate is 3,
+    // so it needs a 3-wide left gate.
     const state = makeState({
       width: 4,
       height: 3,
       blocks: [{ id: 'b1', color: 'jade', cells: [[0, 0], [0, 1], [0, 2]] }],
-      doors: [{ side: 'left', position: 0, width: 3, color: 'jade' }],
+      gates: [{ side: 'left', position: 0, width: 3, color: 'jade' }],
     });
     const r = resolveDrag(state, 'b1', { x: -2, y: 0 });
     expect(r.exited).toBe(true);
   });
 
-  test('vertical line through too-narrow left door is blocked', () => {
+  test('vertical line through too-narrow left gate is blocked', () => {
     const state = makeState({
       width: 4,
       height: 3,
       blocks: [{ id: 'b1', color: 'jade', cells: [[0, 0], [0, 1], [0, 2]] }],
-      doors: [{ side: 'left', position: 0, width: 2, color: 'jade' }],
+      gates: [{ side: 'left', position: 0, width: 2, color: 'jade' }],
     });
     const r = resolveDrag(state, 'b1', { x: -2, y: 0 });
     expect(r.exited).toBe(false);
@@ -269,12 +269,12 @@ describe('end-to-end: loadLevel → resolveDrag → commitMove', () => {
       gridWidth: 4,
       gridHeight: 4,
       blocks: [{ id: 'b1', color: 'jade', cells: [[1, 3]] }],
-      doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
+      gates: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
       walls: [],
     };
     const state = loadLevel(json);
 
-    // Drag straight up across the board and out through the matching door.
+    // Drag straight up across the board and out through the matching gate.
     const r = resolveDrag(state, 'b1', { x: 0, y: -5 });
     expect(r.exited).toBe(true);
 
@@ -297,7 +297,7 @@ describe('exit ramp must be clear of other blocks', () => {
         // L parked at (1, 7) — empty bbox cell at the T's pre-exit position.
         { id: 'l', color: 'crimson', cells: [[0, 7], [1, 7], [0, 6]] },
       ],
-      doors: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
+      gates: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
     });
     const r = resolveDrag(state, 't', { x: 0, y: 3 });
     expect(r.exited).toBe(false);
@@ -316,7 +316,7 @@ describe('exit ramp must be clear of other blocks', () => {
         { id: 't', color: 'jade', cells: [[1, 5], [2, 5], [3, 5], [2, 6]] },
         { id: 'l', color: 'crimson', cells: [[1, 6], [0, 6], [0, 7]] },
       ],
-      doors: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
+      gates: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
     });
     const r = resolveDrag(state, 't', { x: 0.4, y: 1.5 });
     expect(r.exited).toBe(false);
@@ -333,15 +333,15 @@ describe('exit ramp must be clear of other blocks', () => {
         { id: 't', color: 'jade', cells: [[2, 5], [1, 6], [2, 6], [3, 6]] },
         { id: 'l', color: 'crimson', cells: [[0, 5], [1, 5], [0, 6]] },
       ],
-      doors: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
+      gates: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
     });
     const r = resolveDrag(state, 't', { x: 0, y: 3 });
     expect(r.exited).toBe(true);
   });
 });
 
-describe('Slice 3 — multi-door levels', () => {
-  test('mixed-color doors: each block exits through its matching door', () => {
+describe('Slice 3 — multi-gate levels', () => {
+  test('mixed-color gates: each block exits through its matching gate', () => {
     const state = makeState({
       width: 4,
       height: 4,
@@ -349,7 +349,7 @@ describe('Slice 3 — multi-door levels', () => {
         { id: 'r', color: 'crimson', cells: [[0, 0]] },
         { id: 'b', color: 'rare-blue', cells: [[3, 3]] },
       ],
-      doors: [
+      gates: [
         { side: 'top', position: 0, width: 1, color: 'crimson' },
         { side: 'bottom', position: 3, width: 1, color: 'rare-blue' },
       ],
@@ -362,13 +362,13 @@ describe('Slice 3 — multi-door levels', () => {
     expect(r2.exited).toBe(true);
   });
 
-  test("a block does not exit through a door of a different color", () => {
+  test("a block does not exit through a gate of a different color", () => {
     const state = makeState({
       width: 3,
       height: 3,
       blocks: [{ id: 'r', color: 'crimson', cells: [[1, 0]] }],
-      doors: [
-        // Right column has the only top door, and it is the wrong color.
+      gates: [
+        // Right column has the only top gate, and it is the wrong color.
         { side: 'top', position: 1, width: 1, color: 'rare-blue' },
       ],
     });
@@ -376,9 +376,9 @@ describe('Slice 3 — multi-door levels', () => {
     expect(r.exited).toBe(false);
   });
 
-  test('two same-color doors on the same side: each block uses its own', () => {
+  test('two same-color gates on the same side: each block uses its own', () => {
     // Reproduces a bug where canExitThrough only consulted the first matching
-    // door, so the column-2 block was rejected by the column-0 door.
+    // gate, so the column-2 block was rejected by the column-0 gate.
     const state = makeState({
       width: 4,
       height: 3,
@@ -386,7 +386,7 @@ describe('Slice 3 — multi-door levels', () => {
         { id: 'a', color: 'jade', cells: [[0, 0]] },
         { id: 'b', color: 'jade', cells: [[3, 0]] },
       ],
-      doors: [
+      gates: [
         { side: 'top', position: 0, width: 1, color: 'jade' },
         { side: 'top', position: 3, width: 1, color: 'jade' },
       ],
@@ -395,7 +395,7 @@ describe('Slice 3 — multi-door levels', () => {
     expect(resolveDrag(state, 'b', { x: 0, y: -2 }).exited).toBe(true);
   });
 
-  test('two same-color blocks both exit through the same door, sequentially', () => {
+  test('two same-color blocks both exit through the same gate, sequentially', () => {
     let state = makeState({
       width: 3,
       height: 3,
@@ -403,7 +403,7 @@ describe('Slice 3 — multi-door levels', () => {
         { id: 'a', color: 'jade', cells: [[1, 0]] },
         { id: 'b', color: 'jade', cells: [[1, 1]] },
       ],
-      doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
+      gates: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
     });
     const r1 = resolveDrag(state, 'a', { x: 0, y: -5 });
     expect(r1.exited).toBe(true);
@@ -441,11 +441,11 @@ describe('continuous drag respects the block\'s actual current position', () => 
   });
 });
 
-describe('doors are triggers, not openings', () => {
-  // The block visibly stops at the matching door's edge cell; pushing past
+describe('gates are triggers, not openings', () => {
+  // The block visibly stops at the matching gate's edge cell; pushing past
   // that edge fires the exit instead of letting the block sub-cell its way
   // off-board. exitSide tells the renderer which way to fly the block out.
-  test('a multi-cell block exits as soon as its leading cell would cross a matching door', () => {
+  test('a multi-cell block exits as soon as its leading cell would cross a matching gate', () => {
     const state = makeState({
       width: 3,
       height: 5,
@@ -456,7 +456,7 @@ describe('doors are triggers, not openings', () => {
           cells: [[1, 0], [1, 1], [1, 2]],
         },
       ],
-      doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
+      gates: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
     });
     const r = resolveDrag(state, 'b', { x: 0, y: -1.6 });
     expect(r.exited).toBe(true);
@@ -465,12 +465,12 @@ describe('doors are triggers, not openings', () => {
     expect(r.delta.y).toBeGreaterThanOrEqual(-0.6);
   });
 
-  test("a block stops at the edge when the door colour doesn't match", () => {
+  test("a block stops at the edge when the gate colour doesn't match", () => {
     const state = makeState({
       width: 3,
       height: 3,
       blocks: [{ id: 'b', color: 'jade', cells: [[1, 0]] }],
-      doors: [{ side: 'top', position: 1, width: 1, color: 'crimson' }],
+      gates: [{ side: 'top', position: 1, width: 1, color: 'crimson' }],
     });
     const r = resolveDrag(state, 'b', { x: 0, y: -2 });
     expect(r.exited).toBe(false);
@@ -478,12 +478,12 @@ describe('doors are triggers, not openings', () => {
   });
 
   test('a non-fitting block stops at the edge instead of partially crossing', () => {
-    // 1×3 vertical block can't fit a 1-wide LEFT door (vertical extent = 3).
+    // 1×3 vertical block can't fit a 1-wide LEFT gate (vertical extent = 3).
     const state = makeState({
       width: 4,
       height: 3,
       blocks: [{ id: 'b', color: 'jade', cells: [[0, 0], [0, 1], [0, 2]] }],
-      doors: [{ side: 'left', position: 0, width: 2, color: 'jade' }],
+      gates: [{ side: 'left', position: 0, width: 2, color: 'jade' }],
     });
     const r = resolveDrag(state, 'b', { x: -2, y: 0 });
     expect(r.exited).toBe(false);

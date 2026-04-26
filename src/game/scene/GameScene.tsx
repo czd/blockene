@@ -5,11 +5,11 @@ import { useDragControls } from '../input/useDragControls';
 import { useGameStore } from '../state/gameStore';
 import { BlockMesh, ExitingBlockMesh } from './BlockMesh';
 import { BoardMesh } from './BoardMesh';
-import { DoorMesh } from './DoorMesh';
+import { GateMesh } from './GateMesh';
 import { FitOrthoCamera } from './FitOrthoCamera';
 
 // Padding around the board, in world units. Horizontal: 1 cell each side
-// for the door tabs + a hair more. Vertical: a bit extra to leave room for
+// for the gate tabs + a hair more. Vertical: a bit extra to leave room for
 // the HUD and the slight tilt-induced compression.
 const FIT_PAD_X = 2;
 const FIT_PAD_Y = 5;
@@ -46,10 +46,10 @@ export function GameScene() {
       <directionalLight position={[-5, -3, 6]} intensity={0.45} color="#A5B4FC" />
 
       <BoardMesh state={state} />
-      {state.doors.map((door, i) => (
-        <DoorMesh
-          key={`door-${i}`}
-          door={door}
+      {state.gates.map((gate, i) => (
+        <GateMesh
+          key={`gate-${i}`}
+          gate={gate}
           gridWidth={state.gridWidth}
           gridHeight={state.gridHeight}
         />

@@ -6,7 +6,7 @@ import { ShapeThumbnail } from './ShapeThumbnail';
 import { SHAPES } from './shapes';
 import type { Shape } from './shapes';
 
-export type EditorMode = 'blocks' | 'walls' | 'doors';
+export type EditorMode = 'blocks' | 'walls' | 'gates';
 
 const COLORS: Color[] = [
   'rare-blue',
@@ -22,10 +22,10 @@ const COLORS: Color[] = [
 const MODE_LABELS: { id: EditorMode; label: string }[] = [
   { id: 'blocks', label: 'Blocks' },
   { id: 'walls', label: 'Walls' },
-  { id: 'doors', label: 'Doors' },
+  { id: 'gates', label: 'Gates' },
 ];
 
-const DOOR_SIDES: { id: Side; label: string }[] = [
+const GATE_SIDES: { id: Side; label: string }[] = [
   { id: 'top', label: 'Top ↑' },
   { id: 'right', label: 'Right →' },
   { id: 'bottom', label: 'Bottom ↓' },
@@ -37,16 +37,16 @@ export function EditorToolbar({
   color,
   rotation,
   flipped,
-  doorSide,
-  doorWidth,
+  gateSide,
+  gateWidth,
   gridWidth,
   gridHeight,
   onModeChange,
   onColorChange,
   onRotate,
   onFlip,
-  onDoorSideChange,
-  onDoorWidthChange,
+  onGateSideChange,
+  onGateWidthChange,
   onResize,
   onClear,
   onTestPlay,
@@ -59,16 +59,16 @@ export function EditorToolbar({
   color: Color;
   rotation: number;
   flipped: boolean;
-  doorSide: Side;
-  doorWidth: number;
+  gateSide: Side;
+  gateWidth: number;
   gridWidth: number;
   gridHeight: number;
   onModeChange: (m: EditorMode) => void;
   onColorChange: (c: Color) => void;
   onRotate: () => void;
   onFlip: () => void;
-  onDoorSideChange: (s: Side) => void;
-  onDoorWidthChange: (w: number) => void;
+  onGateSideChange: (s: Side) => void;
+  onGateWidthChange: (w: number) => void;
   onResize: (w: number, h: number) => void;
   onClear: () => void;
   onTestPlay: () => void;
@@ -193,15 +193,15 @@ export function EditorToolbar({
         </div>
       )}
 
-      {mode === 'doors' && (
-        <div className="editor-row editor-doors">
+      {mode === 'gates' && (
+        <div className="editor-row editor-gates">
           <span className="editor-label">Side</span>
-          {DOOR_SIDES.map((s) => (
+          {GATE_SIDES.map((s) => (
             <button
               key={s.id}
               type="button"
-              className={`editor-btn small ${doorSide === s.id ? 'active' : ''}`}
-              onClick={() => onDoorSideChange(s.id)}
+              className={`editor-btn small ${gateSide === s.id ? 'active' : ''}`}
+              onClick={() => onGateSideChange(s.id)}
             >
               {s.label}
             </button>
@@ -212,9 +212,9 @@ export function EditorToolbar({
             className="editor-num"
             min={1}
             max={Math.max(gridWidth, gridHeight)}
-            value={doorWidth}
+            value={gateWidth}
             onChange={(e) =>
-              onDoorWidthChange(Math.max(1, parseInt(e.target.value, 10) || 1))
+              onGateWidthChange(Math.max(1, parseInt(e.target.value, 10) || 1))
             }
           />
           <span className="editor-hint">Click anywhere along the chosen side.</span>

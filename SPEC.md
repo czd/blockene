@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-**Blockene** is a browser-based sliding-block puzzle game. The player drags colorful blocks across a grid and pushes them out through matching-colored doors on the board's perimeter. A level is cleared when all blocks have exited the board.
+**Blockene** is a browser-based sliding-block puzzle game. The player drags colorful blocks across a grid and pushes them out through matching-colored gates on the board's perimeter. A level is cleared when all blocks have exited the board.
 
 **v1 scope:** core mechanic + ~10 hand-designed levels. No meta-progression, no shop, no currency, no power-ups, no obstacles beyond the basics needed to make puzzles interesting. The goal is a tight, polished vertical slice of the core feel.
 
@@ -19,11 +19,11 @@
 ### The board
 - A rectangular grid of cells (typical sizes: 6×8, 7×9, 8×10).
 - Each cell is either **empty**, **wall** (immovable border/obstacle), or occupied by part of a **block**.
-- The board's perimeter contains **doors** — colored openings on the edge of the board. Each door has a color, a side (top/right/bottom/left), and a **width** (how many perimeter cells it spans).
-- A block can exit through a door only if (a) the colors match and (b) the block's leading edge in the axis perpendicular to the door's side fits entirely within the door's width. Concretely:
-  - For a top or bottom door, the block's **horizontal extent** at the moment of exit must fit inside the door's horizontal span.
-  - For a left or right door, the block's **vertical extent** at the moment of exit must fit inside the door's vertical span.
-- This means a 1×3 horizontal line block needs a 3-wide door if it exits through the top/bottom, but only a 1-wide door if it exits through the left/right. Door size matches the block shape that's meant to pass through it.
+- The board's perimeter contains **gates** — colored openings on the edge of the board. Each gate has a color, a side (top/right/bottom/left), and a **width** (how many perimeter cells it spans).
+- A block can exit through a gate only if (a) the colors match and (b) the block's leading edge in the axis perpendicular to the gate's side fits entirely within the gate's width. Concretely:
+  - For a top or bottom gate, the block's **horizontal extent** at the moment of exit must fit inside the gate's horizontal span.
+  - For a left or right gate, the block's **vertical extent** at the moment of exit must fit inside the gate's vertical span.
+- This means a 1×3 horizontal line block needs a 3-wide gate if it exits through the top/bottom, but only a 1-wide gate if it exits through the left/right. Gate size matches the block shape that's meant to pass through it.
 
 ### Blocks
 - Each block is a polyomino: 1–6 cells in shapes like square, rectangle, L, T, plus (+), line.
@@ -34,9 +34,9 @@
 - The player presses on a block and drags it.
 - Blocks can move freely on **both axes simultaneously** — there is no axis lock. If the player drags diagonally, the block follows diagonally as far as the path allows.
 - The block's position tracks the finger/cursor as long as the path is clear.
-- A block stops at any cell where it would overlap another block, a wall, or the board edge (unless the edge has a matching door, see below).
-- If the player drags a block toward a **matching-colored door** at the edge, and the block's perpendicular extent fits the door's width, the block exits through it and is removed from the board.
-- If the door's color does not match, or the block doesn't fit, the edge behaves as a wall.
+- A block stops at any cell where it would overlap another block, a wall, or the board edge (unless the edge has a matching gate, see below).
+- If the player drags a block toward a **matching-colored gate** at the edge, and the block's perpendicular extent fits the gate's width, the block exits through it and is removed from the board.
+- If the gate's color does not match, or the block doesn't fit, the edge behaves as a wall.
 - Releasing the drag snaps the block to the nearest grid-aligned cell.
 
 ### Win condition
@@ -84,7 +84,7 @@ These are starting values — expect to tune saturation and lightness once they'
 - Board base: deep slate (`#1E293B`) — dark enough that gold and blue pop, neutral enough not to compete.
 - Board frame / screw decorations: muted graphite (`#334155`).
 - Empty cell: subtle mid-slate (`#475569`) with a soft inset shadow.
-- Door tabs: render in the door's own color, matching block hues exactly so the visual link is unambiguous.
+- Gate tabs: render in the gate's own color, matching block hues exactly so the visual link is unambiguous.
 - HUD text: warm off-white (`#F8FAFC`) for readability against the dark board.
 
 **Lighting:** a warm key light from above-right plus a cooler fill from below-left makes the gold and purple read as metallic/jewel-like rather than flat. This is more impactful than fiddling with the base hex values.
@@ -95,19 +95,19 @@ These are starting values — expect to tune saturation and lightness once they'
 
 ### Board
 - Gray grid base with screw-head decorations on the corners and around the frame (see screenshots).
-- Colored "door" tabs protrude from the perimeter where blocks can exit.
+- Colored "gate" tabs protrude from the perimeter where blocks can exit.
 
 ### Animations & juice
 - Block lifts ~5% when grabbed (scale + shadow grows).
 - Slight squash on collision when a block bumps a wall or another block.
-- Exit animation: block scales down + fades + small particle burst in its color when it leaves through a door.
+- Exit animation: block scales down + fades + small particle burst in its color when it leaves through a gate.
 - Win animation: remaining empty board flashes, "Level Complete" overlay slides in.
 
 ### Sound (minimum set for v1)
 - Block grab (soft thud)
 - Block slide (subtle scrape, looped while moving)
 - Block-on-block collision (light click)
-- Block exits through door (satisfying pop)
+- Block exits through gate (satisfying pop)
 - Level complete (short chime)
 
 ---
@@ -164,7 +164,7 @@ src/
     scene/          # Three.js / R3F components
       BlockMesh.tsx
       BoardMesh.tsx
-      DoorMesh.tsx
+      GateMesh.tsx
       GameScene.tsx
     input/
       useDragControls.ts   # Pointer → grid-cell translation
@@ -199,7 +199,7 @@ The hard separation between `engine/` (pure TS, no rendering) and `scene/` (rend
       "cells": [[1,2], [2,2], [1,3]]   // grid coordinates the block occupies
     }
   ],
-  "doors": [
+  "gates": [
     { "side": "top",    "position": 2, "width": 3, "color": "red" },
     { "side": "right",  "position": 4, "width": 1, "color": "blue" }
   ],
@@ -212,7 +212,7 @@ The hard separation between `engine/` (pure TS, no rendering) and `scene/` (rend
 ### Runtime state (Zustand)
 - `grid`: 2D array, each cell is `null | { blockId, isWall }`
 - `blocks`: `Record<blockId, Block>`
-- `doors`: array of doors
+- `gates`: array of gates
 - `selectedBlockId`: currently dragged block, or null
 - `dragOffset`: current drag position in grid units
 - `history`: stack of moves for undo
@@ -232,7 +232,7 @@ The naive approach — interpolating directly from A to B — fails because the 
    - If a step is blocked, try the two axis-aligned components of the step independently — this allows the block to "slide along" an obstacle when moved diagonally into it (standard wall-sliding pattern).
    - Stop at the last valid sub-cell position.
 4. Render the block at the resolved sub-cell position (smooth, not snapped, while dragging) so the player gets continuous tactile feedback.
-5. Door exits: if a step would move the block off the board on a side with a matching-colored door, and the block's perpendicular extent fits within the door's span, allow the block to continue moving off-board. The block is "in transit" while partially through the door — don't commit the exit until the block has fully cleared the edge.
+5. Gate exits: if a step would move the block off the board on a side with a matching-colored gate, and the block's perpendicular extent fits within the gate's span, allow the block to continue moving off-board. The block is "in transit" while partially through the gate — don't commit the exit until the block has fully cleared the edge.
 6. On pointer release, snap to the nearest valid grid cell, commit the position, and push to undo history. If the block fully exited, trigger the exit animation and remove it.
 
 **Two important properties of this approach:**
@@ -264,11 +264,11 @@ Use Pointer Events (one code path for both). Test on actual mobile early — the
 
 Even with no obstacles beyond walls, you can build a good progression:
 
-- **Levels 1–2:** One block, one door. Teach drag + exit.
-- **Levels 3–4:** Two blocks, two doors. Teach that color matters and blocks block each other.
+- **Levels 1–2:** One block, one gate. Teach drag + exit.
+- **Levels 3–4:** Two blocks, two gates. Teach that color matters and blocks block each other.
 - **Levels 5–6:** Introduce wall cells. Force ordering.
 - **Levels 7–8:** Multiple blocks of the same color. Shape-tessellation puzzles.
-- **Levels 9–10:** Wider boards, ~5 blocks, doors on multiple sides. Real "aha" puzzles.
+- **Levels 9–10:** Wider boards, ~5 blocks, gates on multiple sides. Real "aha" puzzles.
 
 Build a small **level editor** as an internal tool early — even a janky one. Hand-authoring level JSON gets old fast around level 4.
 
@@ -320,8 +320,8 @@ The game is designed for touch first; mouse/desktop is a follow-on, not the prim
 ## 11. Open Questions (resolved)
 
 1. ~~Single-color or multi-color blocks?~~ → **Single-color only for v1.** Multi-color is a deferred feature where the bottom layer must match first, then the top layer is revealed in the same shape.
-2. ~~Door size rule?~~ → **Door size matches the block dimension that crosses it.** A 1×3 line through a top door needs 3 cells of door; through a side door, 1 cell. See §2 for full rule.
-3. ~~Same-color door, multiple blocks?~~ → **Yes, multiple blocks of the same color exit through the same door,** as long as each one fits the door's width.
+2. ~~Gate size rule?~~ → **Gate size matches the block dimension that crosses it.** A 1×3 line through a top gate needs 3 cells of gate; through a side gate, 1 cell. See §2 for full rule.
+3. ~~Same-color gate, multiple blocks?~~ → **Yes, multiple blocks of the same color exit through the same gate,** as long as each one fits the gate's width.
 4. ~~Mobile-first or desktop-first?~~ → **Mobile-first.** Desktop works as a side benefit of pointer events.
 5. ~~Procedural or imported block meshes?~~ → **Procedurally generated in code** for v1.
 
@@ -330,6 +330,6 @@ The game is designed for touch first; mouse/desktop is a follow-on, not the prim
 *(All previously open questions have been resolved. New ones get added here as they come up during implementation.)*
 
 ### Resolved
-- **Door visualization:** open to interpretation. No arrows required. Aim for visual clarity — the door's color and position should make it obvious which block exits where.
+- **Gate visualization:** open to interpretation. No arrows required. Aim for visual clarity — the gate's color and position should make it obvious which block exits where.
 - **Drag axis lock:** **none.** Blocks move freely on both axes simultaneously, with sub-cell-stepped collision resolution that supports diagonal sliding along obstacles. See §5.
 - **Color palette:** defined in §3 — MMO rarity-inspired (rare blue, epic purple, legendary gold) extended to 8 jewel-tone hues.

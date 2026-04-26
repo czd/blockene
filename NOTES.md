@@ -32,33 +32,33 @@ straight line from start → new cumulative target. A block the player has
 *physically* routed around a wall will get yanked back the moment that
 straight line clips the wall ("invisible tether" bug).
 
-### Doors are triggers, not openings
-Mental model: doors are colored walls. The block visibly **collides with the
+### Gates are triggers, not openings
+Mental model: gates are colored walls. The block visibly **collides with the
 board edge** like a wall. The act of attempting to push past the edge through
-a matching door is what fires the exit — the block never sub-cell-positions
+a matching gate is what fires the exit — the block never sub-cell-positions
 itself past the perimeter.
 
 A step's outcome is one of: `valid` (in bounds, free), `blocked`
-(wall / mismatched edge / non-fitting door), or `exit` (out-of-bounds cells
-all leave through the same matching door whose extent fits the block). The
+(wall / mismatched edge / non-fitting gate), or `exit` (out-of-bounds cells
+all leave through the same matching gate whose extent fits the block). The
 resolver returns `exited: true` plus the exit `Side` when the latter fires.
 
-### Door fit = perpendicular extent of the *whole* block
-A 3-wide horizontal block needs a 3-wide top/bottom door (matches x extent)
-but only a 1-tall left/right door (matches y extent). And vice versa for a
+### Gate fit = perpendicular extent of the *whole* block
+A 3-wide horizontal block needs a 3-wide top/bottom gate (matches x extent)
+but only a 1-tall left/right gate (matches y extent). And vice versa for a
 3-tall vertical.
 
 Check the whole block's extent, not just the leading cell.
 
-### Multiple doors of the same color on the same side
-Iterate all matching doors and accept if any one fits. Picking the *first*
-one (`.find()`) silently breaks levels with two same-color doors — blocks
-aligned with the second door get rejected by the first.
+### Multiple gates of the same color on the same side
+Iterate all matching gates and accept if any one fits. Picking the *first*
+one (`.find()`) silently breaks levels with two same-color gates — blocks
+aligned with the second gate get rejected by the first.
 
 ### Snap-back on commit (defensive)
 When releasing mid-drag, the rounded delta might leave cells out of bounds.
 Walk dx/dy back toward (0, 0) along the dominant axis until every cell is in
-bounds. With doors-as-triggers this rarely fires (resolver guarantees
+bounds. With gates-as-triggers this rarely fires (resolver guarantees
 in-bounds achieved delta), but it's cheap insurance.
 
 ---
@@ -116,8 +116,8 @@ We landed on ~0.18 (~24% of cell height) — "clearly hovers above the board"
 reads better than "lifted a hair." Tune by sight, not by spec %.
 
 ### Exit animation
-- **Direction** comes from the door's side, not from the block's traveled
-  delta. A block that started right next to the door has the same fly-out
+- **Direction** comes from the gate's side, not from the block's traveled
+  delta. A block that started right next to the gate has the same fly-out
   motion as one dragged across the board.
 - **Distance** is a fixed constant (~3 cell-units) over a fixed duration
   (~450 ms). Don't scale it by how far the block came.
@@ -139,8 +139,8 @@ fill (~`#A5B4FC`) at intensity 0.45 from below-left. The cool fill is the
 secret — without it the dark sides of blocks read as gray and the whole scene
 looks flat. Reads "metallic/jewel" with all three.
 
-### Doors need to pop
-Place the door tab fully outside the board's overhang (don't bury its
+### Gates need to pop
+Place the gate tab fully outside the board's overhang (don't bury its
 near-edge in the frame). Add a small `emissive` so they don't disappear under
 unfavorable lighting angles — without it, the player doesn't see them and
 thinks the level is broken.
@@ -151,8 +151,8 @@ thinks the level is broken.
 
 ### Pure-TS engine pays for itself by Slice 1
 Keeping the engine free of rendering / DOM / framework imports made the move
-resolver testable as a pure function. We have 50 unit tests covering door
-fit, wall slide, tunneling, multi-door, partial exit, etc. — none of them
+resolver testable as a pure function. We have 50 unit tests covering gate
+fit, wall slide, tunneling, multi-gate, partial exit, etc. — none of them
 touch a browser. When the renderer changed (per-cell cubes → unified
 rectangles) the engine didn't move.
 

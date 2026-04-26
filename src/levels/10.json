@@ -10,7 +10,7 @@
     { "id": "d", "color": "legendary-gold", "cells": [[3, 4], [4, 4]] },
     { "id": "e", "color": "frost-cyan", "cells": [[0, 5]] }
   ],
-  "doors": [
+  "gates": [
     { "side": "top", "position": 0, "width": 1, "color": "jade" },
     { "side": "top", "position": 2, "width": 1, "color": "jade" },
     { "side": "right", "position": 5, "width": 1, "color": "crimson" },

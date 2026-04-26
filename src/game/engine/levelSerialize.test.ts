@@ -10,7 +10,7 @@ const sample: Level = {
   gridWidth: 6,
   gridHeight: 8,
   blocks: [{ id: 'b1', color: 'rare-blue', cells: [[1, 2], [2, 2], [1, 3]] }],
-  doors: [{ side: 'top', position: 2, width: 3, color: 'rare-blue' }],
+  gates: [{ side: 'top', position: 2, width: 3, color: 'rare-blue' }],
   walls: [[3, 5]],
 };
 
@@ -28,7 +28,7 @@ describe('emptyState', () => {
     expect(s.gridWidth).toBe(6);
     expect(s.gridHeight).toBe(8);
     expect(Object.keys(s.blocks)).toHaveLength(0);
-    expect(s.doors).toEqual([]);
+    expect(s.gates).toEqual([]);
     expect(s.walls).toEqual([]);
   });
 });
@@ -52,7 +52,7 @@ describe('resize', () => {
         { id: 'b', color: 'crimson', cells: [[5, 7]] },
       ],
       walls: [[2, 2], [5, 7]],
-      doors: [
+      gates: [
         { side: 'top', position: 0, width: 2, color: 'jade' },
         { side: 'right', position: 6, width: 1, color: 'crimson' },
       ],
@@ -60,8 +60,8 @@ describe('resize', () => {
     const next = resize(state, 4, 4);
     expect(Object.keys(next.blocks)).toEqual(['a']);
     expect(next.walls).toEqual([{ x: 2, y: 2 }]);
-    // The right door would extend beyond rows [0..3], dropped.
-    expect(next.doors).toHaveLength(1);
-    expect(next.doors[0].side).toBe('top');
+    // The right gate would extend beyond rows [0..3], dropped.
+    expect(next.gates).toHaveLength(1);
+    expect(next.gates[0].side).toBe('top');
   });
 });

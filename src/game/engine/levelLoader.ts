@@ -16,7 +16,7 @@ export function parse(level: Level): EngineState {
     gridWidth: level.gridWidth,
     gridHeight: level.gridHeight,
     blocks,
-    doors: level.doors.map((d) => ({ ...d })),
+    gates: level.gates.map((d) => ({ ...d })),
     walls,
   };
 }

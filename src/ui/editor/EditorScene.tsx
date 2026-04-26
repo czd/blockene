@@ -4,7 +4,7 @@ import { ExtrudeGeometry, Plane, Raycaster, Vector2, Vector3 } from 'three';
 
 import type { Block, Cell, EngineState } from '../../game/engine/types';
 import { polyominoShape } from '../../game/scene/blockGeometry';
-import { DoorMesh } from '../../game/scene/DoorMesh';
+import { GateMesh } from '../../game/scene/GateMesh';
 import { FitOrthoCamera } from '../../game/scene/FitOrthoCamera';
 import { blockPalette, boardPalette } from '../../game/scene/palette';
 
@@ -85,10 +85,10 @@ export const EditorScene = forwardRef<
           }
         />
       ))}
-      {state.doors.map((door, i) => (
-        <DoorMesh
-          key={`door-${i}`}
-          door={door}
+      {state.gates.map((gate, i) => (
+        <GateMesh
+          key={`gate-${i}`}
+          gate={gate}
           gridWidth={state.gridWidth}
           gridHeight={state.gridHeight}
         />

@@ -8,7 +8,7 @@
     { "id": "b", "color": "jade", "cells": [[2, 4]] },
     { "id": "c", "color": "jade", "cells": [[4, 4]] }
   ],
-  "doors": [
+  "gates": [
     { "side": "top", "position": 0, "width": 5, "color": "jade" }
   ],
   "walls": []

@@ -56,7 +56,7 @@ const EMPTY_STATE: EngineState = {
   gridWidth: 0,
   gridHeight: 0,
   blocks: {},
-  doors: [],
+  gates: [],
   walls: [],
 };
 

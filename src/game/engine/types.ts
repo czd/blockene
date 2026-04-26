@@ -30,7 +30,7 @@ export type Block = {
   modifiers: BlockModifier[];
 };
 
-export type Door = {
+export type Gate = {
   side: Side;
   position: number;
   width: number;
@@ -49,7 +49,7 @@ export type Level = {
     color: Color;
     cells: [number, number][];
   }>;
-  doors: Door[];
+  gates: Gate[];
   walls: [number, number][];
 };
 
@@ -57,6 +57,6 @@ export type EngineState = {
   gridWidth: number;
   gridHeight: number;
   blocks: Record<BlockId, Block>;
-  doors: Door[];
+  gates: Gate[];
   walls: Wall[];
 };
