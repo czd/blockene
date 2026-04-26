@@ -157,6 +157,7 @@ function polyominoOutline(cells: Cell[]): OutlineVertex[] {
 export function studsForCells(
   cells: Cell[],
   edgeInset: number,
+  studRadius: number,
 ): { x: number; y: number }[] {
   if (cells.length === 0) return [];
   const cellSet = new Set(cells.map((c) => key(c.x, c.y)));
@@ -179,9 +180,15 @@ export function studsForCells(
       const sy = minY + edgeInset + iy * stepY;
       const cx = Math.floor(sx);
       const cy = Math.floor(sy);
-      if (cellSet.has(key(cx, cy))) {
-        out.push({ x: sx, y: -sy });
-      }
+      if (!cellSet.has(key(cx, cy))) continue;
+      // Skip a stud whose disc would cross an outer body edge — i.e. the
+      // adjacent cell on the side it bleeds toward isn't in the polyomino.
+      // This is what hides studs near the L's concave corner.
+      if (sx - cx < studRadius && !cellSet.has(key(cx - 1, cy))) continue;
+      if (cx + 1 - sx < studRadius && !cellSet.has(key(cx + 1, cy))) continue;
+      if (sy - cy < studRadius && !cellSet.has(key(cx, cy - 1))) continue;
+      if (cy + 1 - sy < studRadius && !cellSet.has(key(cx, cy + 1))) continue;
+      out.push({ x: sx, y: -sy });
     }
   }
   return out;

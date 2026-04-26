@@ -42,7 +42,10 @@ export function BlockMesh({ block }: { block: Block }) {
   const geometry = useMemo(() => buildBodyGeometry(block.cells), [block.cells]);
   useEffect(() => () => geometry.dispose(), [geometry]);
 
-  const studs = useMemo(() => studsForCells(block.cells, STUD_EDGE_INSET), [block.cells]);
+  const studs = useMemo(
+    () => studsForCells(block.cells, STUD_EDGE_INSET, STUD_RADIUS),
+    [block.cells],
+  );
 
   // Grab-lift: smoothly raise the block while dragging.
   useFrame(() => {
