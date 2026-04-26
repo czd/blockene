@@ -1,0 +1,9 @@
+{
+  "id": "02",
+  "name": "Side Exit",
+  "gridWidth": 4,
+  "gridHeight": 4,
+  "blocks": [{ "id": "a", "color": "crimson", "cells": [[3, 2]] }],
+  "doors": [{ "side": "right", "position": 2, "width": 1, "color": "crimson" }],
+  "walls": []
+}

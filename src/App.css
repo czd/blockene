@@ -17,3 +17,252 @@ body,
 canvas {
   touch-action: none;
 }
+
+/* ---------- HUD ---------- */
+
+.hud {
+  position: absolute;
+  top: env(safe-area-inset-top, 0);
+  left: env(safe-area-inset-left, 0);
+  right: env(safe-area-inset-right, 0);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  pointer-events: none;
+  color: #f8fafc;
+  font-family: system-ui, sans-serif;
+}
+
+.hud > * {
+  pointer-events: auto;
+}
+
+.hud-title {
+  text-align: center;
+  user-select: none;
+}
+
+.hud-level {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.hud-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.hud-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 250, 252, 0.12);
+  background: rgba(15, 23, 42, 0.65);
+  color: #f8fafc;
+  font-size: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, transform 0.1s;
+}
+
+.hud-btn:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.85);
+}
+
+.hud-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.hud-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- Level-complete overlay ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  animation: overlay-in 0.25s ease-out both;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.overlay-card {
+  background: #1e293b;
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  border-radius: 18px;
+  padding: 32px 36px;
+  text-align: center;
+  min-width: 260px;
+  box-shadow:
+    0 20px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(248, 250, 252, 0.04);
+  animation: card-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes card-in {
+  from { transform: scale(0.86) translateY(8px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.overlay-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-family: system-ui, sans-serif;
+}
+
+.overlay-title {
+  font-size: 38px;
+  font-weight: 700;
+  margin: 6px 0 22px;
+  color: #f8fafc;
+  font-family: system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.overlay-btn {
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 250, 252, 0.14);
+  background: rgba(15, 23, 42, 0.7);
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.overlay-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.overlay-btn:active {
+  transform: scale(0.96);
+}
+
+.overlay-btn.primary {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.overlay-btn.primary:hover {
+  background: #34d399;
+}
+
+/* ---------- Level picker ---------- */
+
+.picker {
+  position: fixed;
+  inset: 0;
+  padding: max(env(safe-area-inset-top, 0), 24px) 24px 24px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: system-ui, sans-serif;
+  overflow-y: auto;
+}
+
+.picker-header {
+  text-align: center;
+  margin: 24px 0 32px;
+}
+
+.picker-title {
+  font-size: 42px;
+  margin: 0;
+  letter-spacing: -0.03em;
+  background: linear-gradient(120deg, #f59e0b, #a855f7 60%, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.picker-subtitle {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+}
+
+.picker-grid {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 520px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .picker-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.picker-tile {
+  width: 100%;
+  padding: 18px 16px;
+  text-align: left;
+  border-radius: 14px;
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  background: linear-gradient(155deg, #1e293b, #0f172a);
+  color: #f8fafc;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: inherit;
+  transition: transform 0.12s, border-color 0.15s, background 0.15s;
+}
+
+.picker-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(248, 250, 252, 0.18);
+}
+
+.picker-tile:active {
+  transform: scale(0.98);
+}
+
+.picker-num {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.picker-name {
+  font-size: 17px;
+  font-weight: 600;
+}

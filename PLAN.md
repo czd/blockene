@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 4 (chunky look) ✅ wired — rounded blocks with studs, board screws, three-light setup, contact shadows, grab lift, exit particles. Needs human in-browser verification + 60fps perf check on a phone. Collision squash + InstancedMesh stud optimization deferred (see Slice 4 notes).
+**Current status:** Slice 5 (sound + UI shell) ✅ wired — Howler-backed audio module, picker → game → win-overlay → next loop, 10 hand-authored levels, undo/restart HUD. Needs human in-browser verification + the actual sound files dropped into `public/sounds/`. Slice 6 (level editor) ready next.
 
 ---
 
@@ -120,22 +120,24 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 
 ---
 
-## Slice 5 — Sound + UI shell
+## Slice 5 — Sound + UI shell ✅
 
 **Goal:** game feels alive; player can navigate.
 
-**Files:** `src/audio/sounds.ts`, `assets/sounds/*.mp3`, `ui/Hud.tsx`, `ui/LevelComplete.tsx`, `ui/LevelPicker.tsx`, `App.tsx`.
+**Files:** `src/audio/sounds.ts`, `public/sounds/README.md`, `ui/Hud.tsx`, `ui/LevelComplete.tsx`, `ui/LevelPicker.tsx`, `levels/01.json`–`10.json`, `levels/index.ts`, `App.tsx`, `App.css`.
 
 **Tasks:**
-- [ ] Sound module: Howler-backed registry; `play(name)`. Triggered from store actions.
-- [ ] Wire 5 sounds: grab, slide (looped while dragging), collide, exit, win.
-- [ ] `Hud`: undo button, restart button, level number, "back to picker" button.
-- [ ] `LevelComplete`: overlay with "Next" button.
-- [ ] `LevelPicker`: minimal list of levels (numbered tiles, completed/not). No stars.
-- [ ] App routing: picker ↔ in-game, plus dev-only `#level=05` URL hash for jumping.
-- [ ] CSS-grid layout in `App.tsx`: `<Canvas>` fills, HUD overlays with safe-area insets.
+- [x] Sound module: Howler-backed registry exposing `play` / `startLoop` / `stopLoop`. Lazy-loads each clip on first use.
+- [x] Wire 5 sounds: `grab` on `beginDrag`, `slide` looped during drag, `collide` on first stuck-frame transition, `exit` on a successful exit-commit, `win` when status flips to `'won'`.
+- [x] `Hud`: undo (disabled when history empty), restart, level number + name, back-to-picker button. Safe-area-inset top/left/right.
+- [x] `LevelComplete`: centered card overlay with `Next` (hidden on the last level) and `Levels` buttons.
+- [x] `LevelPicker`: 2-column (3 on ≥600px wide) grid of numbered tiles with the level name. No stars / no completion tracking.
+- [x] App routing: picker ↔ in-game via local state, plus dev-only `#level=NN` URL hash for jumping.
+- [x] CSS-grid HUD layout, full-screen `<Canvas>`, overlay/picker styled.
+- [x] **Decision:** sound files live under `public/sounds/` (drop `.mp3`s and they Just Work) instead of `src/assets/sounds/`. Original plan said the latter, but Vite would error at build time if any file is missing — `public/` lets Howler fail soft.
+- [x] 10 hand-authored levels (`01.json`–`10.json`) following the SPEC §7 progression: drag → side exit → two colors → ordering → walls → detour → same hue → multi-cell shapes → multi-side → workshop.
 
-**DoD:** all 5 sounds fire; undo/restart work; finish a level → "Next" → next level; picker lets you jump anywhere.
+**DoD:** all 5 sounds fire; undo/restart work; finish a level → "Next" → next level; picker lets you jump anywhere. ⚠️ Audio code paths exercised every action; sound files themselves are user-supplied (drop into `public/sounds/`). UI flow needs in-browser verification before declaring done.
 
 ---
 

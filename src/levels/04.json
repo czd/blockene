@@ -1,0 +1,14 @@
+{
+  "id": "04",
+  "name": "After You",
+  "gridWidth": 4,
+  "gridHeight": 5,
+  "blocks": [
+    { "id": "a", "color": "jade", "cells": [[1, 1]] },
+    { "id": "b", "color": "jade", "cells": [[1, 3]] }
+  ],
+  "doors": [
+    { "side": "top", "position": 1, "width": 1, "color": "jade" }
+  ],
+  "walls": []
+}

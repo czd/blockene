@@ -1,0 +1,9 @@
+{
+  "id": "05",
+  "name": "Wall Ahead",
+  "gridWidth": 5,
+  "gridHeight": 5,
+  "blocks": [{ "id": "a", "color": "jade", "cells": [[2, 4]] }],
+  "doors": [{ "side": "top", "position": 2, "width": 1, "color": "jade" }],
+  "walls": [[2, 2]]
+}

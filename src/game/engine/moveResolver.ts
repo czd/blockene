@@ -8,26 +8,40 @@ const MAX_ITERATIONS = 10_000;
 export type ResolveResult = {
   delta: Vec2;
   exited: boolean;
+  exitSide: Side | null;
 };
 
-// Resolve a drag from the block's committed cells toward `desiredDelta` (in cell
-// units). Walks in sub-cell steps, supports wall-sliding on either axis, and
-// reports `exited: true` once the block has fully cleared the board through a
-// matching door.
+type StepOutcome = 'valid' | 'blocked' | { exit: Side };
+
+// Resolve a drag from `fromDelta` (the block's current sub-cell offset, or
+// (0, 0) at drag start) toward `desiredDelta`. Walks in 0.1-unit sub-steps,
+// supports wall-sliding on either axis. Doors are *triggers*, not openings:
+// the block collides with the board edge like a wall, but a step that would
+// push it past the edge through a matching door instead reports `exited`.
+//
+// During a continuous drag the caller should pass the previous resolved delta
+// as `fromDelta`. Walking from the *origin* on every pointermove means a
+// straight line from start to a new cumulative target can clip a wall the
+// block has already physically routed past — which feels like an invisible
+// tether snapping it back.
 export function resolveDrag(
   state: EngineState,
   blockId: BlockId,
   desiredDelta: Vec2,
+  fromDelta?: Vec2,
 ): ResolveResult {
   const block = state.blocks[blockId];
-  if (!block) return { delta: { x: 0, y: 0 }, exited: false };
+  const startX = fromDelta?.x ?? 0;
+  const startY = fromDelta?.y ?? 0;
+  if (!block) {
+    return { delta: { x: startX, y: startY }, exited: false, exitSide: null };
+  }
 
   const grid = new Grid(state);
-  let curX = 0;
-  let curY = 0;
-  let remX = desiredDelta.x;
-  let remY = desiredDelta.y;
-  let exited = false;
+  let curX = startX;
+  let curY = startY;
+  let remX = desiredDelta.x - startX;
+  let remY = desiredDelta.y - startY;
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const dist = Math.hypot(remX, remY);
@@ -37,40 +51,47 @@ export function resolveDrag(
     const sx = remX * factor;
     const sy = remY * factor;
 
-    if (isPositionValid(block, grid, state.doors, curX + sx, curY + sy)) {
+    const full = tryStep(block, grid, state.doors, curX + sx, curY + sy);
+    if (full === 'valid') {
       curX += sx;
       curY += sy;
       remX -= sx;
       remY -= sy;
-    } else {
-      const xCanSlide =
-        Math.abs(sx) > EPS && isPositionValid(block, grid, state.doors, curX + sx, curY);
-      const yCanSlide =
-        Math.abs(sy) > EPS && isPositionValid(block, grid, state.doors, curX, curY + sy);
-      if (xCanSlide) {
-        curX += sx;
-        remX -= sx;
-      } else if (yCanSlide) {
-        curY += sy;
-        remY -= sy;
-      } else {
-        break;
-      }
+      continue;
+    }
+    if (typeof full === 'object') {
+      return { delta: { x: curX, y: curY }, exited: true, exitSide: full.exit };
     }
 
-    if (isFullyExited(block, grid, curX, curY)) {
-      exited = true;
+    // Diagonal step blocked. Try axis-aligned slides; an exit on either axis
+    // counts too if the block is squarely lined up with a matching door.
+    const xStep =
+      Math.abs(sx) > EPS ? tryStep(block, grid, state.doors, curX + sx, curY) : 'blocked';
+    const yStep =
+      Math.abs(sy) > EPS ? tryStep(block, grid, state.doors, curX, curY + sy) : 'blocked';
+
+    if (xStep === 'valid') {
+      curX += sx;
+      remX -= sx;
+    } else if (yStep === 'valid') {
+      curY += sy;
+      remY -= sy;
+    } else if (typeof xStep === 'object') {
+      return { delta: { x: curX, y: curY }, exited: true, exitSide: xStep.exit };
+    } else if (typeof yStep === 'object') {
+      return { delta: { x: curX, y: curY }, exited: true, exitSide: yStep.exit };
+    } else {
       break;
     }
   }
 
-  return { delta: { x: curX, y: curY }, exited };
+  return { delta: { x: curX, y: curY }, exited: false, exitSide: null };
 }
 
-// Apply a finalized drag to produce a new EngineState. Snaps to the nearest
-// grid cell; removes the block entirely when it has exited. If the snap
-// position would leave any cell out of bounds (e.g. user released mid-door),
-// walks back along the dominant axis until every cell is in bounds.
+// Apply a finalized drag to produce a new EngineState. Removes the block on
+// exit; otherwise snaps to the nearest grid cell. The resolver guarantees the
+// returned non-exit delta keeps every cell in bounds, so no snap-back walk is
+// needed — but we keep one as a defensive fallback.
 export function commitMove(
   state: EngineState,
   blockId: BlockId,
@@ -118,25 +139,34 @@ function cellsAllInBounds(
   return true;
 }
 
-function isPositionValid(
+// Classify a candidate sub-cell position. Three outcomes:
+//   - 'valid'   : every cell is in bounds and free
+//   - { exit }  : at least one cell is out of bounds, all out-of-bounds
+//                 cells leave through the same matching door, and the block's
+//                 perpendicular extent fits the door
+//   - 'blocked' : anything else (wall hit, mismatched door, corner overhang…)
+function tryStep(
   block: Block,
   grid: Grid,
   doors: Door[],
   dx: number,
   dy: number,
-): boolean {
+): StepOutcome {
+  let outSide: Side | null = null;
   for (const c of block.cells) {
     const nx = Math.round(c.x + dx);
     const ny = Math.round(c.y + dy);
     if (grid.isInBounds({ x: nx, y: ny })) {
-      if (!grid.isCellFree({ x: nx, y: ny }, block.id)) return false;
+      if (!grid.isCellFree({ x: nx, y: ny }, block.id)) return 'blocked';
     } else {
       const side = sideForOutOfBounds(nx, ny, grid.width, grid.height);
-      if (!side) return false;
-      if (!canExitThrough(block, doors, side, dx, dy)) return false;
+      if (!side) return 'blocked';
+      if (outSide === null) outSide = side;
+      else if (outSide !== side) return 'blocked';
     }
   }
-  return true;
+  if (outSide === null) return 'valid';
+  return doorAllowsExit(block, doors, outSide, dx, dy) ? { exit: outSide } : 'blocked';
 }
 
 function sideForOutOfBounds(
@@ -157,16 +187,13 @@ function sideForOutOfBounds(
   return 'right';
 }
 
-function canExitThrough(
+function doorAllowsExit(
   block: Block,
   doors: Door[],
   side: Side,
   dx: number,
   dy: number,
 ): boolean {
-  const door = doors.find((d) => d.side === side && d.color === block.color);
-  if (!door) return false;
-
   const usesX = side === 'top' || side === 'bottom';
   let min = Infinity;
   let max = -Infinity;
@@ -175,14 +202,9 @@ function canExitThrough(
     if (v < min) min = v;
     if (v > max) max = v;
   }
-  return min >= door.position && max <= door.position + door.width - 1;
-}
-
-function isFullyExited(block: Block, grid: Grid, dx: number, dy: number): boolean {
-  for (const c of block.cells) {
-    const nx = Math.round(c.x + dx);
-    const ny = Math.round(c.y + dy);
-    if (grid.isInBounds({ x: nx, y: ny })) return false;
+  for (const door of doors) {
+    if (door.side !== side || door.color !== block.color) continue;
+    if (min >= door.position && max <= door.position + door.width - 1) return true;
   }
-  return true;
+  return false;
 }

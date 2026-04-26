@@ -59,7 +59,7 @@ describe('resolveDrag — basic motion', () => {
   test('unknown block id returns zero delta', () => {
     const state = makeState({ width: 3, height: 3 });
     const r = resolveDrag(state, 'missing', { x: 1, y: 1 });
-    expect(r).toEqual({ delta: { x: 0, y: 0 }, exited: false });
+    expect(r).toEqual({ delta: { x: 0, y: 0 }, exited: false, exitSide: null });
   });
 });
 
@@ -319,6 +319,25 @@ describe('Slice 3 — multi-door levels', () => {
     expect(r.exited).toBe(false);
   });
 
+  test('two same-color doors on the same side: each block uses its own', () => {
+    // Reproduces a bug where canExitThrough only consulted the first matching
+    // door, so the column-2 block was rejected by the column-0 door.
+    const state = makeState({
+      width: 4,
+      height: 3,
+      blocks: [
+        { id: 'a', color: 'jade', cells: [[0, 0]] },
+        { id: 'b', color: 'jade', cells: [[3, 0]] },
+      ],
+      doors: [
+        { side: 'top', position: 0, width: 1, color: 'jade' },
+        { side: 'top', position: 3, width: 1, color: 'jade' },
+      ],
+    });
+    expect(resolveDrag(state, 'a', { x: 0, y: -2 }).exited).toBe(true);
+    expect(resolveDrag(state, 'b', { x: 0, y: -2 }).exited).toBe(true);
+  });
+
   test('two same-color blocks both exit through the same door, sequentially', () => {
     let state = makeState({
       width: 3,
@@ -341,8 +360,35 @@ describe('Slice 3 — multi-door levels', () => {
   });
 });
 
-describe('Slice 3 — partial-exit-then-release snap-back', () => {
-  test('a 3-tall block half-through a top door snaps back inside on release', () => {
+describe('continuous drag respects the block\'s actual current position', () => {
+  // Reproduces the "invisible tether" bug: after routing a block around a
+  // wall, the next pointermove would walk a fresh line from the origin to
+  // the new cumulative target. If that straight line clipped the wall the
+  // block had already navigated past, the block snapped back.
+  test('routing past a wall, then crossing back to the other side', () => {
+    const state = makeState({
+      width: 5,
+      height: 5,
+      blocks: [{ id: 'b1', color: 'jade', cells: [[2, 4]] }],
+      walls: [[2, 2]],
+    });
+    // Up-and-right past the wall — block ends roughly above-and-right of it.
+    const r1 = resolveDrag(state, 'b1', { x: 1, y: -4 });
+    expect(r1.delta.x).toBeGreaterThan(0.9);
+    expect(r1.delta.y).toBeLessThan(-3.5);
+    // Now drag toward the cell behind the wall on the other side. Walking
+    // from origin would clip (2, 2); walking from r1.delta is clear.
+    const r2 = resolveDrag(state, 'b1', { x: -1, y: -3 }, r1.delta);
+    expect(r2.delta.x).toBeLessThan(-0.9);
+    expect(r2.delta.y).toBeLessThan(-2.9);
+  });
+});
+
+describe('doors are triggers, not openings', () => {
+  // The block visibly stops at the matching door's edge cell; pushing past
+  // that edge fires the exit instead of letting the block sub-cell its way
+  // off-board. exitSide tells the renderer which way to fly the block out.
+  test('a multi-cell block exits as soon as its leading cell would cross a matching door', () => {
     const state = makeState({
       width: 3,
       height: 5,
@@ -355,16 +401,35 @@ describe('Slice 3 — partial-exit-then-release snap-back', () => {
       ],
       doors: [{ side: 'top', position: 1, width: 1, color: 'jade' }],
     });
-    // Drag part-way out: top cell crosses the door, bottom cells still inside.
     const r = resolveDrag(state, 'b', { x: 0, y: -1.6 });
+    expect(r.exited).toBe(true);
+    expect(r.exitSide).toBe('top');
+    // The achieved delta is the last in-bounds sub-cell position.
+    expect(r.delta.y).toBeGreaterThanOrEqual(-0.6);
+  });
+
+  test("a block stops at the edge when the door colour doesn't match", () => {
+    const state = makeState({
+      width: 3,
+      height: 3,
+      blocks: [{ id: 'b', color: 'jade', cells: [[1, 0]] }],
+      doors: [{ side: 'top', position: 1, width: 1, color: 'crimson' }],
+    });
+    const r = resolveDrag(state, 'b', { x: 0, y: -2 });
     expect(r.exited).toBe(false);
-    // Without snap-back, rounded delta y = -2 would put the top cell at y = -2.
-    const next = commitMove(state, 'b', r.delta, r.exited);
-    for (const c of next.blocks.b.cells) {
-      expect(c.x).toBeGreaterThanOrEqual(0);
-      expect(c.x).toBeLessThan(3);
-      expect(c.y).toBeGreaterThanOrEqual(0);
-      expect(c.y).toBeLessThan(5);
-    }
+    expect(r.delta.y).toBeGreaterThanOrEqual(-0.5);
+  });
+
+  test('a non-fitting block stops at the edge instead of partially crossing', () => {
+    // 1×3 vertical block can't fit a 1-wide LEFT door (vertical extent = 3).
+    const state = makeState({
+      width: 4,
+      height: 3,
+      blocks: [{ id: 'b', color: 'jade', cells: [[0, 0], [0, 1], [0, 2]] }],
+      doors: [{ side: 'left', position: 0, width: 2, color: 'jade' }],
+    });
+    const r = resolveDrag(state, 'b', { x: -2, y: 0 });
+    expect(r.exited).toBe(false);
+    expect(r.delta.x).toBeGreaterThanOrEqual(-0.5);
   });
 });

@@ -1,0 +1,19 @@
+{
+  "id": "09",
+  "name": "Crossroads",
+  "gridWidth": 6,
+  "gridHeight": 6,
+  "blocks": [
+    { "id": "a", "color": "jade", "cells": [[0, 0]] },
+    { "id": "b", "color": "crimson", "cells": [[5, 0]] },
+    { "id": "c", "color": "epic-purple", "cells": [[0, 5]] },
+    { "id": "d", "color": "legendary-gold", "cells": [[5, 5]] }
+  ],
+  "doors": [
+    { "side": "top", "position": 0, "width": 1, "color": "jade" },
+    { "side": "right", "position": 0, "width": 1, "color": "crimson" },
+    { "side": "left", "position": 5, "width": 1, "color": "epic-purple" },
+    { "side": "bottom", "position": 5, "width": 1, "color": "legendary-gold" }
+  ],
+  "walls": [[2, 2], [3, 2], [2, 3], [3, 3]]
+}
