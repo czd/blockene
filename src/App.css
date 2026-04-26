@@ -18,25 +18,45 @@ canvas {
   touch-action: none;
 }
 
+/* ---------- Game shell ---------- */
+
+.game-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+  padding-top: env(safe-area-inset-top, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+.game-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+}
+
+.game-stage > canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
 /* ---------- HUD ---------- */
 
 .hud {
-  position: absolute;
-  top: env(safe-area-inset-top, 0);
-  left: env(safe-area-inset-left, 0);
-  right: env(safe-area-inset-right, 0);
+  flex: 0 0 auto;
+  color: #f8fafc;
+  font-family: system-ui, sans-serif;
+  padding: 12px 18px 6px;
+}
+
+.hud-top {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  padding: 14px 18px;
-  pointer-events: none;
-  color: #f8fafc;
-  font-family: system-ui, sans-serif;
-}
-
-.hud > * {
-  pointer-events: auto;
 }
 
 .hud-title {
@@ -55,6 +75,54 @@ canvas {
   font-size: 16px;
   font-weight: 600;
   margin-top: 2px;
+}
+
+/* ---------- Big stats (timer + moves) ---------- */
+
+.big-stats {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  align-items: flex-end;
+}
+
+.big-stat {
+  text-align: center;
+}
+
+.big-stat-value {
+  font-size: clamp(44px, 13vw, 64px);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+
+.big-stat-value--time {
+  color: #f59e0b;
+  text-shadow:
+    0 5px 0 #92400e,
+    0 6px 0 rgba(0, 0, 0, 0.25),
+    0 10px 22px rgba(245, 158, 11, 0.18);
+}
+
+.big-stat-value--moves {
+  color: #10b981;
+  text-shadow:
+    0 5px 0 #065f46,
+    0 6px 0 rgba(0, 0, 0, 0.25),
+    0 10px 22px rgba(16, 185, 129, 0.18);
+}
+
+.big-stat-label {
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #94a3b8;
 }
 
 .hud-actions {
@@ -138,10 +206,58 @@ canvas {
 .overlay-title {
   font-size: 38px;
   font-weight: 700;
-  margin: 6px 0 22px;
+  margin: 6px 0 12px;
   color: #f8fafc;
   font-family: system-ui, sans-serif;
   letter-spacing: -0.02em;
+}
+
+.overlay-record {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #f59e0b, #fcd34d);
+  color: #1f2937;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.overlay-stats {
+  margin: 0 0 22px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 24px;
+  text-align: left;
+  font-family: system-ui, sans-serif;
+}
+
+.overlay-stat dt {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.overlay-stat dd {
+  margin: 2px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.overlay-stat-best {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
 }
 
 .overlay-actions {

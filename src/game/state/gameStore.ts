@@ -18,7 +18,11 @@ export type ExitingEntry = {
   startTime: number;
 };
 
+export type Best = { timeMs: number; moves: number };
+
 export const EXIT_ANIM_MS = 450;
+
+const BESTS_KEY = 'blockene-bests';
 
 type GameState = {
   state: EngineState;
@@ -27,9 +31,18 @@ type GameState = {
   dragging: DragState | null;
   exiting: ExitingEntry[];
   status: 'playing' | 'won';
-  // Tracks whether the in-flight drag was hitting a wall / another block on
-  // the previous resolve. Used to fire the "collide" sound on a fresh stick.
   blocked: boolean;
+
+  // ---- Run metrics ---------------------------------------------------------
+  // Reset on loadLevel and on restart. `restarts` survives restart so the
+  // player can see "you restarted N times" on the level-complete card.
+  // `moves` is derived from `history.length` and not stored separately.
+  currentLevelId: string | null;
+  startedAt: number | null;
+  solvedAt: number | null;
+  undos: number;
+  restarts: number;
+  bests: Record<string, Best>;
 
   loadLevel: (level: Level) => void;
   beginDrag: (blockId: BlockId) => void;
@@ -53,6 +66,25 @@ function deriveStatus(state: EngineState): 'playing' | 'won' {
   return Object.keys(state.blocks).length === 0 ? 'won' : 'playing';
 }
 
+function loadBests(): Record<string, Best> {
+  try {
+    const raw = globalThis.localStorage?.getItem(BESTS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveBests(bests: Record<string, Best>): void {
+  try {
+    globalThis.localStorage?.setItem(BESTS_KEY, JSON.stringify(bests));
+  } catch {
+    // Storage might be disabled (private mode, quota); silently drop.
+  }
+}
+
 const COLLIDE_THRESHOLD = 0.15;
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -64,6 +96,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   status: 'playing',
   blocked: false,
 
+  currentLevelId: null,
+  startedAt: null,
+  solvedAt: null,
+  undos: 0,
+  restarts: 0,
+  bests: loadBests(),
+
   loadLevel(level) {
     const state = parseLevel(level);
     set({
@@ -74,6 +113,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       exiting: [],
       status: deriveStatus(state),
       blocked: false,
+      currentLevelId: level.id,
+      startedAt: null,
+      solvedAt: null,
+      undos: 0,
+      restarts: 0,
     });
   },
 
@@ -87,8 +131,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   updateDrag(desired) {
     const { state, dragging, blocked } = get();
     if (!dragging) return;
-    // Walk from the block's currently-achieved sub-cell position so the path
-    // respects where the block actually is, not where it started the drag.
     const resolved = resolveDrag(state, dragging.blockId, desired, dragging.resolved.delta);
     const desiredMag = Math.hypot(desired.x, desired.y);
     const resolvedMag = Math.hypot(resolved.delta.x, resolved.delta.y);
@@ -98,7 +140,17 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   endDrag() {
-    const { state, dragging, history, exiting, status: prevStatus } = get();
+    const {
+      state,
+      dragging,
+      history,
+      exiting,
+      status: prevStatus,
+      startedAt,
+      solvedAt,
+      currentLevelId,
+      bests,
+    } = get();
     if (!dragging) return;
     audio.stopLoop('slide');
     const { blockId, resolved } = dragging;
@@ -122,14 +174,44 @@ export const useGameStore = create<GameState>((set, get) => ({
           ]
         : exiting;
     const nextStatus = deriveStatus(next);
+    const nextHistory = moved ? [...history, state] : history;
+    const nextStartedAt = moved && startedAt === null ? performance.now() : startedAt;
+
+    let nextSolvedAt = solvedAt;
+    let nextBests = bests;
+    if (nextStatus === 'won' && prevStatus !== 'won') {
+      nextSolvedAt = performance.now();
+      const elapsed = nextStartedAt !== null ? nextSolvedAt - nextStartedAt : 0;
+      const movesDone = nextHistory.length;
+      if (currentLevelId) {
+        const prior = bests[currentLevelId];
+        if (
+          !prior ||
+          elapsed < prior.timeMs ||
+          movesDone < prior.moves
+        ) {
+          nextBests = {
+            ...bests,
+            [currentLevelId]: {
+              timeMs: prior ? Math.min(prior.timeMs, elapsed) : elapsed,
+              moves: prior ? Math.min(prior.moves, movesDone) : movesDone,
+            },
+          };
+          saveBests(nextBests);
+        }
+      }
+    }
 
     set({
       state: next,
-      history: moved ? [...history, state] : history,
+      history: nextHistory,
       dragging: null,
       exiting: nextExiting,
       status: nextStatus,
       blocked: false,
+      startedAt: nextStartedAt,
+      solvedAt: nextSolvedAt,
+      bests: nextBests,
     });
 
     if (resolved.exited) audio.play('exit');
@@ -143,7 +225,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   undo() {
-    const { history } = get();
+    const { history, undos } = get();
     if (history.length === 0) return;
     audio.stopLoop('slide');
     const previous = history[history.length - 1];
@@ -154,11 +236,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       exiting: [],
       status: deriveStatus(previous),
       blocked: false,
+      undos: undos + 1,
     });
   },
 
   restart() {
-    const { initial } = get();
+    const { initial, restarts } = get();
     if (!initial) return;
     audio.stopLoop('slide');
     set({
@@ -168,6 +251,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       exiting: [],
       status: deriveStatus(initial),
       blocked: false,
+      startedAt: null,
+      solvedAt: null,
+      undos: 0,
+      restarts: restarts + 1,
     });
   },
 }));

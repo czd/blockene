@@ -101,12 +101,16 @@ function App() {
 
   return (
     <>
-      <GameScene />
-      <Hud
-        levelNumber={playingFromEditor ? 0 : (levelIndex ?? 0) + 1}
-        levelName={playingFromEditor ? `Editor — ${level.name}` : level.name}
-        onBack={goBack}
-      />
+      <div className="game-shell">
+        <Hud
+          levelNumber={playingFromEditor ? 0 : (levelIndex ?? 0) + 1}
+          levelName={playingFromEditor ? `Editor — ${level.name}` : level.name}
+          onBack={goBack}
+        />
+        <div className="game-stage">
+          <GameScene />
+        </div>
+      </div>
       {status === 'won' && (
         <LevelComplete
           levelNumber={playingFromEditor ? 0 : (levelIndex ?? 0) + 1}
