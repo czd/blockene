@@ -2,7 +2,7 @@
 
 Living document. **Update as work progresses** (see [Update protocol](#update-protocol)).
 
-**Current status:** Slice 5 (sound + UI shell) ✅ wired — Howler-backed audio module, picker → game → win-overlay → next loop, 10 hand-authored levels, undo/restart HUD. Needs human in-browser verification + the actual sound files dropped into `public/sounds/`. Slice 6 (level editor) ready next.
+**Current status:** Slice 6 (level editor) ✅ wired — `#editor` route, click-to-place tools (wall / block + shape / 4 door sides), import/export JSON, test-play loop. Slice 7 (author the 10 levels) is the last one.
 
 ---
 
@@ -141,25 +141,25 @@ Living document. **Update as work progresses** (see [Update protocol](#update-pr
 
 ---
 
-## Slice 6 — Level editor tool
+## Slice 6 — Level editor tool ✅
 
 **Goal:** make level authoring fast enough that Slice 7 isn't a slog. SPEC §7: "even a janky one" is fine.
 
-**Files:** `ui/editor/Editor.tsx`, `ui/editor/EditorToolbar.tsx`, `engine/levelSerialize.ts`, route into `App.tsx`.
+**Files:** `engine/levelSerialize.ts`, `ui/editor/Editor.tsx`, `ui/editor/EditorScene.tsx`, `ui/editor/EditorToolbar.tsx`, `ui/editor/shapes.ts`, route into `App.tsx`, CSS in `App.css`.
 
 **Tasks:**
-- [ ] Decide editor entry point: dev-only route (`#editor`) vs. always-on. *(Default: dev-only via URL hash.)*
-- [ ] Editor UI:
-  - [ ] Adjustable grid size.
-  - [ ] Click empty cell to add wall; click wall to remove.
-  - [ ] Pick a color + a shape from a palette, click cells to place a block; click a block to delete.
-  - [ ] Click an edge cell to add/edit a door (color + width).
-- [ ] `engine/levelSerialize.ts`: `serialize(EngineState) → Level JSON` (the inverse of `levelLoader.parse`).
-- [ ] "Test play" button: load the in-progress level into the game scene.
-- [ ] Export to clipboard / download as JSON.
-- [ ] Import existing JSON to edit.
+- [x] Editor entry point: dev-only `#editor` URL hash routes the app to the editor on load.
+- [x] Editor UI:
+  - [x] Adjustable grid size (3-12 wide × 3-14 tall, content outside new bounds is dropped on shrink).
+  - [x] Click an empty cell with the Wall tool to add; click a wall to remove. Walls under blocks are blocked.
+  - [x] Block tool with color + shape palette (1×1, 2×1, 1×2, 3×1, 1×3, 2×2, L). Click empty cells to place; click a block to delete.
+  - [x] Four door tools (one per side). Door width is configurable in the toolbar; clicking an existing door cell removes it.
+- [x] `engine/levelSerialize.ts`: `serialize(EngineState, id, name) → Level`, plus `emptyState`, `nextBlockId`, `resize`. Round-trip test confirms `parse ∘ serialize = id`.
+- [x] "Test play" button: serializes the current state and loads it into the game scene; HUD's Back returns to the editor with state preserved.
+- [x] Export: copies the JSON to clipboard (falls back to a `prompt()` if the browser blocks `navigator.clipboard`).
+- [x] Import: reads a JSON paste, populates the editor.
 
-**DoD:** can build, test-play, and export a 3-block, 2-door level end-to-end without touching JSON by hand.
+**DoD:** can build, test-play, and export a 3-block, 2-door level end-to-end without touching JSON by hand. ⚠️ Pipeline works end-to-end on engine + render; needs human in-browser verification of the click ergonomics.
 
 ---
 
