@@ -1,7 +1,12 @@
-import type { Color } from '../../game/engine/types';
+import type { PointerEvent as ReactPointerEvent } from 'react';
+
+import type { Color, Side } from '../../game/engine/types';
 import { blockPalette } from '../../game/scene/palette';
+import { ShapeThumbnail } from './ShapeThumbnail';
 import { SHAPES } from './shapes';
-import type { EditorTool, Shape } from './shapes';
+import type { Shape } from './shapes';
+
+export type EditorMode = 'blocks' | 'walls' | 'doors';
 
 const COLORS: Color[] = [
   'rare-blue',
@@ -14,29 +19,33 @@ const COLORS: Color[] = [
   'frost-cyan',
 ];
 
-const TOOLS: { id: EditorTool; label: string }[] = [
-  { id: 'wall', label: 'Wall' },
-  { id: 'block', label: 'Block' },
-  { id: 'door-top', label: 'Door ↑' },
-  { id: 'door-right', label: 'Door →' },
-  { id: 'door-bottom', label: 'Door ↓' },
-  { id: 'door-left', label: 'Door ←' },
+const MODE_LABELS: { id: EditorMode; label: string }[] = [
+  { id: 'blocks', label: 'Blocks' },
+  { id: 'walls', label: 'Walls' },
+  { id: 'doors', label: 'Doors' },
+];
+
+const DOOR_SIDES: { id: Side; label: string }[] = [
+  { id: 'top', label: 'Top ↑' },
+  { id: 'right', label: 'Right →' },
+  { id: 'bottom', label: 'Bottom ↓' },
+  { id: 'left', label: 'Left ←' },
 ];
 
 export function EditorToolbar({
-  tool,
+  mode,
   color,
-  shape,
   rotation,
   flipped,
+  doorSide,
   doorWidth,
   gridWidth,
   gridHeight,
-  onToolChange,
+  onModeChange,
   onColorChange,
-  onShapeChange,
   onRotate,
   onFlip,
+  onDoorSideChange,
   onDoorWidthChange,
   onResize,
   onClear,
@@ -44,20 +53,21 @@ export function EditorToolbar({
   onExport,
   onImport,
   onBack,
+  onShapePointerDown,
 }: {
-  tool: EditorTool;
+  mode: EditorMode;
   color: Color;
-  shape: Shape;
   rotation: number;
   flipped: boolean;
+  doorSide: Side;
   doorWidth: number;
   gridWidth: number;
   gridHeight: number;
-  onToolChange: (t: EditorTool) => void;
+  onModeChange: (m: EditorMode) => void;
   onColorChange: (c: Color) => void;
-  onShapeChange: (s: Shape) => void;
   onRotate: () => void;
   onFlip: () => void;
+  onDoorSideChange: (s: Side) => void;
   onDoorWidthChange: (w: number) => void;
   onResize: (w: number, h: number) => void;
   onClear: () => void;
@@ -65,9 +75,11 @@ export function EditorToolbar({
   onExport: () => void;
   onImport: () => void;
   onBack: () => void;
+  onShapePointerDown: (
+    shape: Shape,
+    e: ReactPointerEvent<HTMLDivElement>,
+  ) => void;
 }) {
-  const isDoor = tool.startsWith('door-');
-
   return (
     <div className="editor-toolbar">
       <div className="editor-row">
@@ -110,19 +122,6 @@ export function EditorToolbar({
       </div>
 
       <div className="editor-row">
-        {TOOLS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={`editor-btn ${tool === t.id ? 'active' : ''}`}
-            onClick={() => onToolChange(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="editor-row">
         <span className="editor-label">Color</span>
         {COLORS.map((c) => (
           <button
@@ -137,51 +136,88 @@ export function EditorToolbar({
         ))}
       </div>
 
-      {tool === 'block' && (
-        <div className="editor-row">
-          <span className="editor-label">Shape</span>
-          {SHAPES.map((s) => (
+      <div className="editor-row editor-tabs">
+        {MODE_LABELS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`editor-tab ${mode === t.id ? 'active' : ''}`}
+            onClick={() => onModeChange(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'blocks' && (
+        <div className="editor-row editor-shape-row">
+          <span className="editor-label">Drag a shape onto the board</span>
+          <div className="editor-shapes">
+            {SHAPES.map((s) => (
+              <ShapeThumbnail
+                key={s.name}
+                shape={s}
+                color={color}
+                rotation={rotation}
+                flipped={flipped}
+                cellPx={22}
+                interactive
+                onPointerDown={(e) => onShapePointerDown(s, e)}
+              />
+            ))}
+          </div>
+          <div className="editor-orient">
             <button
-              key={s.name}
               type="button"
-              className={`editor-btn small ${shape.name === s.name ? 'active' : ''}`}
-              onClick={() => onShapeChange(s)}
+              className="editor-btn small"
+              onClick={onRotate}
+              title="Rotate (R)"
             >
-              {s.name}
+              ↻ {rotation * 90}°
             </button>
-          ))}
-          <button
-            type="button"
-            className="editor-btn small"
-            onClick={onRotate}
-            title={`Rotate (currently ${rotation * 90}°)`}
-            aria-label="Rotate shape"
-          >
-            ↻ {rotation * 90}°
-          </button>
-          <button
-            type="button"
-            className={`editor-btn small ${flipped ? 'active' : ''}`}
-            onClick={onFlip}
-            title={`Flip (currently ${flipped ? 'on' : 'off'})`}
-            aria-label="Flip shape"
-          >
-            ⇄
-          </button>
+            <button
+              type="button"
+              className={`editor-btn small ${flipped ? 'active' : ''}`}
+              onClick={onFlip}
+              title="Flip (F)"
+            >
+              ⇄
+            </button>
+          </div>
         </div>
       )}
 
-      {isDoor && (
+      {mode === 'walls' && (
         <div className="editor-row">
-          <span className="editor-label">Door width</span>
+          <span className="editor-hint">Click cells on the board to add or remove walls.</span>
+        </div>
+      )}
+
+      {mode === 'doors' && (
+        <div className="editor-row editor-doors">
+          <span className="editor-label">Side</span>
+          {DOOR_SIDES.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`editor-btn small ${doorSide === s.id ? 'active' : ''}`}
+              onClick={() => onDoorSideChange(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+          <span className="editor-label">Width</span>
           <input
             type="number"
             className="editor-num"
             min={1}
             max={Math.max(gridWidth, gridHeight)}
             value={doorWidth}
-            onChange={(e) => onDoorWidthChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
+            onChange={(e) =>
+              onDoorWidthChange(Math.max(1, parseInt(e.target.value, 10) || 1))
+            }
           />
+          <span className="editor-hint">Click anywhere along the chosen side.</span>
         </div>
       )}
     </div>

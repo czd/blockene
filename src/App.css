@@ -402,3 +402,95 @@ canvas {
   height: 100%;
   display: block;
 }
+
+.editor-tabs {
+  border-bottom: 1px solid rgba(248, 250, 252, 0.08);
+  padding-bottom: 0;
+  gap: 0;
+}
+
+.editor-tab {
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.editor-tab:hover {
+  color: #cbd5e1;
+}
+
+.editor-tab.active {
+  color: #f8fafc;
+  border-bottom-color: #a5b4fc;
+}
+
+.editor-shape-row {
+  align-items: flex-start;
+}
+
+.editor-shapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.editor-orient {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.editor-doors {
+  flex-wrap: wrap;
+}
+
+.editor-hint {
+  color: #94a3b8;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* Toolbar shape thumbnails */
+.shape-thumb {
+  display: inline-block;
+}
+
+.shape-thumb--interactive {
+  cursor: grab;
+  user-select: none;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  transition: transform 0.1s, border-color 0.12s, background 0.12s;
+}
+
+.shape-thumb--interactive:hover {
+  border-color: rgba(165, 180, 252, 0.45);
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.shape-thumb--interactive:active {
+  cursor: grabbing;
+  transform: scale(0.96);
+}
+
+/* Floating ghost while a drag is in flight */
+.editor-ghost {
+  position: fixed;
+  z-index: 50;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+  opacity: 0.85;
+}
