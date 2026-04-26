@@ -43,6 +43,10 @@ type GameState = {
   undos: number;
   restarts: number;
   bests: Record<string, Best>;
+  // Whether the most recent win strictly improved each metric (not a tie).
+  // Reset on loadLevel/restart; set on win.
+  lastTimeRecord: boolean;
+  lastMovesRecord: boolean;
 
   loadLevel: (level: Level) => void;
   beginDrag: (blockId: BlockId) => void;
@@ -102,6 +106,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   undos: 0,
   restarts: 0,
   bests: loadBests(),
+  lastTimeRecord: false,
+  lastMovesRecord: false,
 
   loadLevel(level) {
     const state = parseLevel(level);
@@ -118,6 +124,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       solvedAt: null,
       undos: 0,
       restarts: 0,
+      lastTimeRecord: false,
+      lastMovesRecord: false,
     });
   },
 
@@ -179,22 +187,22 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     let nextSolvedAt = solvedAt;
     let nextBests = bests;
+    let nextTimeRecord = false;
+    let nextMovesRecord = false;
     if (nextStatus === 'won' && prevStatus !== 'won') {
       nextSolvedAt = performance.now();
       const elapsed = nextStartedAt !== null ? nextSolvedAt - nextStartedAt : 0;
       const movesDone = nextHistory.length;
       if (currentLevelId) {
         const prior = bests[currentLevelId];
-        if (
-          !prior ||
-          elapsed < prior.timeMs ||
-          movesDone < prior.moves
-        ) {
+        nextTimeRecord = !prior || elapsed < prior.timeMs;
+        nextMovesRecord = !prior || movesDone < prior.moves;
+        if (nextTimeRecord || nextMovesRecord) {
           nextBests = {
             ...bests,
             [currentLevelId]: {
-              timeMs: prior ? Math.min(prior.timeMs, elapsed) : elapsed,
-              moves: prior ? Math.min(prior.moves, movesDone) : movesDone,
+              timeMs: nextTimeRecord ? elapsed : prior!.timeMs,
+              moves: nextMovesRecord ? movesDone : prior!.moves,
             },
           };
           saveBests(nextBests);
@@ -212,6 +220,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       startedAt: nextStartedAt,
       solvedAt: nextSolvedAt,
       bests: nextBests,
+      lastTimeRecord: nextTimeRecord,
+      lastMovesRecord: nextMovesRecord,
     });
 
     if (resolved.exited) audio.play('exit');
@@ -255,6 +265,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       solvedAt: null,
       undos: 0,
       restarts: restarts + 1,
+      lastTimeRecord: false,
+      lastMovesRecord: false,
     });
   },
 }));

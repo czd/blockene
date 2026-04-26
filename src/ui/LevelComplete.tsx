@@ -19,12 +19,11 @@ export function LevelComplete({
   const restarts = useGameStore((s) => s.restarts);
   const currentLevelId = useGameStore((s) => s.currentLevelId);
   const bests = useGameStore((s) => s.bests);
+  const isTimeRecord = useGameStore((s) => s.lastTimeRecord);
+  const isMovesRecord = useGameStore((s) => s.lastMovesRecord);
 
   const elapsedMs = startedAt !== null && solvedAt !== null ? solvedAt - startedAt : 0;
   const best = currentLevelId ? bests[currentLevelId] : undefined;
-  const isTimeRecord = best?.timeMs === elapsedMs;
-  const isMovesRecord = best?.moves === moves;
-  const isNewRecord = (isTimeRecord || isMovesRecord) && best !== undefined;
 
   return (
     <div className="overlay overlay--win" role="dialog" aria-modal="true">
@@ -32,7 +31,16 @@ export function LevelComplete({
         <div className="overlay-eyebrow">Level {String(levelNumber).padStart(2, '0')}</div>
         <h1 className="overlay-title">Solved</h1>
 
-        {isNewRecord && <div className="overlay-record">New record</div>}
+        {(isTimeRecord || isMovesRecord) && (
+          <div className="overlay-records">
+            {isTimeRecord && (
+              <span className="overlay-record overlay-record--time">New best time</span>
+            )}
+            {isMovesRecord && (
+              <span className="overlay-record overlay-record--moves">New best moves</span>
+            )}
+          </div>
+        )}
 
         <dl className="overlay-stats">
           <div className="overlay-stat">
