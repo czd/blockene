@@ -5,17 +5,22 @@ import type { EngineState, Level } from './game/engine/types';
 import { GameScene } from './game/scene/GameScene';
 import { useGameStore } from './game/state/gameStore';
 import { LEVELS } from './levels';
+import { ArenaComingSoon } from './ui/ArenaComingSoon';
 import { Editor } from './ui/editor/Editor';
 import { Hud } from './ui/Hud';
 import { LevelComplete } from './ui/LevelComplete';
 import { LevelPicker } from './ui/LevelPicker';
+import { MainMenu } from './ui/MainMenu';
 import './App.css';
 
-type View = 'picker' | 'game' | 'editor';
+type View = 'menu' | 'tutorial' | 'arena' | 'game' | 'editor';
 
 function readInitialView(): View {
-  if (window.location.hash.includes('editor')) return 'editor';
-  return 'picker';
+  const hash = window.location.hash;
+  if (hash.includes('editor')) return 'editor';
+  if (hash.includes('arena')) return 'arena';
+  if (hash.includes('tutorial') || hash.includes('level=')) return 'tutorial';
+  return 'menu';
 }
 
 function readLevelFromHash(): number | null {
@@ -52,13 +57,43 @@ function App() {
     }
   }, [view, editorPlayLevel, loadLevel]);
 
+  if (view === 'menu') {
+    return (
+      <MainMenu
+        onTutorial={() => {
+          window.location.hash = 'tutorial';
+          setView('tutorial');
+        }}
+        onArena={() => {
+          window.location.hash = 'arena';
+          setView('arena');
+        }}
+        onEditor={() => {
+          window.location.hash = 'editor';
+          setView('editor');
+        }}
+      />
+    );
+  }
+
+  if (view === 'arena') {
+    return (
+      <ArenaComingSoon
+        onBack={() => {
+          window.location.hash = '';
+          setView('menu');
+        }}
+      />
+    );
+  }
+
   if (view === 'editor') {
     return (
       <Editor
         initial={editorState ?? undefined}
         onBack={() => {
           window.location.hash = '';
-          setView('picker');
+          setView('menu');
         }}
         onTestPlay={(state, meta) => {
           setEditorState({ state, ...meta });
@@ -70,9 +105,13 @@ function App() {
     );
   }
 
-  if (view === 'picker') {
+  if (view === 'tutorial') {
     return (
       <LevelPicker
+        onBack={() => {
+          window.location.hash = '';
+          setView('menu');
+        }}
         onSelect={(i) => {
           setEditorPlayLevel(null);
           setLevelIndex(i);
@@ -95,7 +134,7 @@ function App() {
       setView('editor');
     } else {
       setLevelIndex(null);
-      setView('picker');
+      setView('tutorial');
     }
   };
 

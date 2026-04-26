@@ -1,9 +1,43 @@
 {
   "id": "01",
   "name": "Across",
-  "gridWidth": 4,
-  "gridHeight": 6,
-  "blocks": [{ "id": "a", "color": "jade", "cells": [[1, 5]] }],
-  "gates": [{ "side": "top", "position": 1, "width": 1, "color": "jade" }],
+  "gridWidth": 5,
+  "gridHeight": 5,
+  "blocks": [
+    {
+      "id": "b1",
+      "color": "legendary-gold",
+      "cells": [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ]
+    },
+    {
+      "id": "b2",
+      "color": "royal-magenta",
+      "cells": [
+        [3, 3],
+        [4, 3],
+        [3, 4],
+        [4, 4]
+      ]
+    }
+  ],
+  "gates": [
+    {
+      "side": "bottom",
+      "position": 1,
+      "width": 2,
+      "color": "legendary-gold"
+    },
+    {
+      "side": "top",
+      "position": 2,
+      "width": 2,
+      "color": "royal-magenta"
+    }
+  ],
   "walls": []
 }

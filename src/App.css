@@ -322,6 +322,148 @@ canvas {
   background: #34d399;
 }
 
+/* ---------- Main menu ---------- */
+
+.menu {
+  position: fixed;
+  inset: 0;
+  padding: max(env(safe-area-inset-top, 0), 32px) 24px 32px;
+  background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 60%);
+  color: #f8fafc;
+  font-family: system-ui, sans-serif;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+}
+
+.menu-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-logo {
+  width: 88px;
+  height: 88px;
+  filter: drop-shadow(0 12px 24px rgba(245, 158, 11, 0.4));
+}
+
+.menu-title {
+  font-size: clamp(48px, 11vw, 72px);
+  margin: 0;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  background: linear-gradient(120deg, #f59e0b, #a855f7 60%, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.menu-subtitle {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.arena-teaser {
+  max-width: 420px;
+  text-align: center;
+  color: #cbd5e1;
+  font-size: 15px;
+  line-height: 1.55;
+  padding: 0 8px;
+}
+
+/* ---------- Chunky 3D buttons ---------- */
+
+.chunky-btn {
+  position: relative;
+  width: 100%;
+  padding: 18px 24px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  color: #1f2937;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Stacked depth: a darker-color slab below the face creates the 3D edge,
+     plus a soft cast-shadow underneath. */
+  box-shadow:
+    0 6px 0 var(--btn-edge),
+    0 7px 0 rgba(0, 0, 0, 0.25),
+    0 14px 24px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(155deg, var(--btn-face-light), var(--btn-face));
+  transform: translateY(0);
+  transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+}
+
+.chunky-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 0 var(--btn-edge),
+    0 9px 0 rgba(0, 0, 0, 0.25),
+    0 18px 28px rgba(0, 0, 0, 0.35);
+}
+
+.chunky-btn:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 var(--btn-edge),
+    0 3px 0 rgba(0, 0, 0, 0.25),
+    0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.chunky-btn-label {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.chunky-btn-sub {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(31, 41, 55, 0.65);
+}
+
+.chunky-btn--arena {
+  --btn-face: #f59e0b;
+  --btn-face-light: #fcd34d;
+  --btn-edge: #92400e;
+}
+
+.chunky-btn--tutorial {
+  --btn-face: #10b981;
+  --btn-face-light: #6ee7b7;
+  --btn-edge: #065f46;
+}
+
+.chunky-btn--editor {
+  --btn-face: #a5b4fc;
+  --btn-face-light: #c7d2fe;
+  --btn-edge: #4338ca;
+}
+
 /* ---------- Level picker ---------- */
 
 .picker {
@@ -332,6 +474,33 @@ canvas {
   color: #f8fafc;
   font-family: system-ui, sans-serif;
   overflow-y: auto;
+}
+
+.picker-back {
+  position: absolute;
+  top: max(env(safe-area-inset-top, 0), 16px);
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 250, 252, 0.12);
+  background: rgba(15, 23, 42, 0.65);
+  color: #f8fafc;
+  font-size: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, transform 0.1s;
+}
+
+.picker-back:hover {
+  background: rgba(30, 41, 59, 0.85);
+}
+
+.picker-back:active {
+  transform: scale(0.94);
 }
 
 .picker-header {

@@ -1,86 +1,79 @@
 {
   "id": "03",
-  "name": "Heavy Lifting",
+  "name": "Columns",
   "gridWidth": 5,
-  "gridHeight": 8,
+  "gridHeight": 7,
   "blocks": [
     {
-      "id": "b5",
-      "color": "jade",
+      "id": "b1",
+      "color": "legendary-gold",
       "cells": [
-        [
-          0,
-          4
-        ],
-        [
-          1,
-          4
-        ],
-        [
-          0,
-          3
-        ]
+        [1, 1],
+        [2, 1],
+        [3, 1]
       ]
     },
     {
       "id": "b2",
       "color": "legendary-gold",
       "cells": [
-        [
-          4,
-          4
-        ],
-        [
-          4,
-          3
-        ],
-        [
-          3,
-          4
-        ]
+        [1, 5],
+        [2, 5],
+        [3, 5]
       ]
     },
     {
       "id": "b3",
-      "color": "crimson",
+      "color": "royal-magenta",
       "cells": [
-        [
-          1,
-          3
-        ],
-        [
-          2,
-          3
-        ],
-        [
-          3,
-          3
-        ],
-        [
-          2,
-          4
-        ]
+        [1, 2],
+        [1, 3],
+        [1, 4]
+      ]
+    },
+    {
+      "id": "b4",
+      "color": "deep-sapphire",
+      "cells": [
+        [2, 2],
+        [2, 3],
+        [2, 4]
+      ]
+    },
+    {
+      "id": "b5",
+      "color": "jade",
+      "cells": [
+        [3, 2],
+        [3, 3],
+        [3, 4]
       ]
     }
   ],
   "gates": [
     {
-      "side": "bottom",
+      "side": "top",
       "position": 1,
       "width": 3,
-      "color": "crimson"
-    },
-    {
-      "side": "left",
-      "position": 3,
-      "width": 2,
       "color": "legendary-gold"
     },
     {
-      "side": "right",
-      "position": 3,
-      "width": 2,
+      "side": "bottom",
+      "position": 4,
+      "width": 1,
       "color": "jade"
+    },
+    {
+      "side": "bottom",
+      "position": 0,
+      "width": 1,
+      "color": "royal-magenta"
+    },
+    {
+      "side": "right",
+      "position": 2,
+      "width": 3,
+      "color": "deep-sapphire"
     }
   ],
   "walls": []
