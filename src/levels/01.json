@@ -1,9 +1,9 @@
 {
   "id": "01",
-  "name": "First Step",
+  "name": "Across",
   "gridWidth": 4,
-  "gridHeight": 4,
-  "blocks": [{ "id": "a", "color": "jade", "cells": [[1, 0]] }],
+  "gridHeight": 6,
+  "blocks": [{ "id": "a", "color": "jade", "cells": [[1, 5]] }],
   "doors": [{ "side": "top", "position": 1, "width": 1, "color": "jade" }],
   "walls": []
 }

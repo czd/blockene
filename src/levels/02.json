@@ -1,9 +1,15 @@
 {
   "id": "02",
-  "name": "Side Exit",
+  "name": "Crossing",
   "gridWidth": 4,
-  "gridHeight": 4,
-  "blocks": [{ "id": "a", "color": "crimson", "cells": [[3, 2]] }],
-  "doors": [{ "side": "right", "position": 2, "width": 1, "color": "crimson" }],
+  "gridHeight": 6,
+  "blocks": [
+    { "id": "a", "color": "jade", "cells": [[0, 3]] },
+    { "id": "b", "color": "crimson", "cells": [[3, 3]] }
+  ],
+  "doors": [
+    { "side": "right", "position": 3, "width": 1, "color": "jade" },
+    { "side": "left", "position": 3, "width": 1, "color": "crimson" }
+  ],
   "walls": []
 }

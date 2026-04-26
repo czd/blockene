@@ -6,6 +6,13 @@ import { useGameStore } from '../state/gameStore';
 import { BlockMesh, ExitingBlockMesh } from './BlockMesh';
 import { BoardMesh } from './BoardMesh';
 import { DoorMesh } from './DoorMesh';
+import { FitOrthoCamera } from './FitOrthoCamera';
+
+// Padding around the board, in world units. Horizontal: 1 cell each side
+// for the door tabs + a hair more. Vertical: a bit extra to leave room for
+// the HUD and the slight tilt-induced compression.
+const FIT_PAD_X = 2;
+const FIT_PAD_Y = 5;
 
 export function GameScene() {
   const state = useGameStore((s) => s.state);
@@ -21,15 +28,15 @@ export function GameScene() {
   return (
     <Canvas
       orthographic
-      camera={{
-        position: [cx, -cy - 4, 11],
-        zoom: 70,
-        near: 0.1,
-        far: 100,
-      }}
-      onCreated={({ camera }) => camera.lookAt(cx, -cy, 0)}
+      camera={{ near: 0.1, far: 100 }}
     >
       <color attach="background" args={['#0F172A']} />
+      <FitOrthoCamera
+        cx={cx}
+        cy={cy}
+        worldWidth={state.gridWidth + FIT_PAD_X}
+        worldHeight={state.gridHeight + FIT_PAD_Y}
+      />
 
       {/* Three-light setup: warm key from above-right + cool fill from
           below-left + ambient tint. Reads as "metallic / jewel-like" rather

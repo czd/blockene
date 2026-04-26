@@ -2,10 +2,15 @@ import { Canvas } from '@react-three/fiber';
 
 import type { EngineState } from '../../game/engine/types';
 import { decomposeIntoRects } from '../../game/scene/blockGeometry';
-import { blockPalette, boardPalette } from '../../game/scene/palette';
 import { DoorMesh } from '../../game/scene/DoorMesh';
+import { FitOrthoCamera } from '../../game/scene/FitOrthoCamera';
+import { blockPalette, boardPalette } from '../../game/scene/palette';
 
 const FRAME_PADDING = 0.2;
+// Editor leaves slightly more room — the toolbar eats screen height and
+// users want to click outside the grid for door placement.
+const FIT_PAD_X = 3;
+const FIT_PAD_Y = 5;
 
 export function EditorScene({
   state,
@@ -25,15 +30,15 @@ export function EditorScene({
   return (
     <Canvas
       orthographic
-      camera={{
-        position: [cx, -cy - 4, 11],
-        zoom: 60,
-        near: 0.1,
-        far: 100,
-      }}
-      onCreated={({ camera }) => camera.lookAt(cx, -cy, 0)}
+      camera={{ near: 0.1, far: 100 }}
     >
       <color attach="background" args={['#0F172A']} />
+      <FitOrthoCamera
+        cx={cx}
+        cy={cy}
+        worldWidth={w + FIT_PAD_X}
+        worldHeight={h + FIT_PAD_Y}
+      />
       <ambientLight intensity={0.6} />
       <directionalLight position={[6, 4, 9]} intensity={0.9} color="#FEF3C7" />
       <directionalLight position={[-5, -3, 6]} intensity={0.4} color="#A5B4FC" />
