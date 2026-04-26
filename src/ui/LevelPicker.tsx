@@ -4,6 +4,7 @@ export function LevelPicker({ onSelect }: { onSelect: (index: number) => void })
   return (
     <div className="picker">
       <div className="picker-header">
+        <img src="/favicon.svg" alt="" className="picker-logo" width={64} height={64} />
         <h1 className="picker-title">Blockene</h1>
         <p className="picker-subtitle">Choose a level</p>
       </div>
