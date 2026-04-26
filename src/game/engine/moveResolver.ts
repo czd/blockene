@@ -142,8 +142,11 @@ function cellsAllInBounds(
 // Classify a candidate sub-cell position. Three outcomes:
 //   - 'valid'   : every cell is in bounds and free
 //   - { exit }  : at least one cell is out of bounds, all out-of-bounds
-//                 cells leave through the same matching door, and the block's
-//                 perpendicular extent fits the door
+//                 cells leave through the same matching door, the block's
+//                 perpendicular extent fits the door, AND the gate-facing
+//                 empty cells of the bounding box at the pre-exit position
+//                 are clear (so a polyomino like a T can't wedge its stem
+//                 through if another block is sitting in the gap)
 //   - 'blocked' : anything else (wall hit, mismatched door, corner overhang…)
 function tryStep(
   block: Block,
@@ -166,7 +169,64 @@ function tryStep(
     }
   }
   if (outSide === null) return 'valid';
-  return doorAllowsExit(block, doors, outSide, dx, dy) ? { exit: outSide } : 'blocked';
+  if (!doorAllowsExit(block, doors, outSide, dx, dy)) return 'blocked';
+  if (!exitRampClear(block, grid, outSide, dx, dy)) return 'blocked';
+  return { exit: outSide };
+}
+
+const EXIT_DIR: Record<Side, { x: number; y: number }> = {
+  top: { x: 0, y: -1 },
+  bottom: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+};
+
+// Walks back one step in the *opposite* exit direction to recover the
+// block's pre-exit footprint, then verifies two things:
+//   (a) every pre-exit body cell that's still in bounds is free — without
+//       this, the resolver's wall-slide can route the block *around* an
+//       obstacle and exit at a different sub-cell delta, even though the
+//       block never actually traversed the pre-exit position cleanly;
+//   (b) for each pre-exit body cell, the cell one step further toward the
+//       gate (within the pre-exit bounding box) is free — these are the
+//       gaps the body has to sweep through to finish exiting.
+// Cells *behind* the body in the exit direction never enter the check, so
+// an upside-down T whose top corners are blocked can still exit.
+function exitRampClear(
+  block: Block,
+  grid: Grid,
+  side: Side,
+  dx: number,
+  dy: number,
+): boolean {
+  const dir = EXIT_DIR[side];
+  const pre = block.cells.map((c) => ({
+    x: Math.round(c.x + dx) - dir.x,
+    y: Math.round(c.y + dy) - dir.y,
+  }));
+  const bodyKeys = new Set(pre.map((c) => `${c.x},${c.y}`));
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const c of pre) {
+    if (c.x < minX) minX = c.x;
+    if (c.x > maxX) maxX = c.x;
+    if (c.y < minY) minY = c.y;
+    if (c.y > maxY) maxY = c.y;
+  }
+  // (a) pre-exit body cells must be free.
+  for (const c of pre) {
+    if (!grid.isInBounds({ x: c.x, y: c.y })) continue;
+    if (!grid.isCellFree({ x: c.x, y: c.y }, block.id)) return false;
+  }
+  // (b) gate-facing gaps in the pre-exit bounding box must be free.
+  for (const c of pre) {
+    const nx = c.x + dir.x;
+    const ny = c.y + dir.y;
+    if (nx < minX || nx > maxX || ny < minY || ny > maxY) continue;
+    if (bodyKeys.has(`${nx},${ny}`)) continue;
+    if (!grid.isInBounds({ x: nx, y: ny })) continue;
+    if (!grid.isCellFree({ x: nx, y: ny }, block.id)) return false;
+  }
+  return true;
 }
 
 function sideForOutOfBounds(

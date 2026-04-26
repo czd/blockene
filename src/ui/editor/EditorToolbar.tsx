@@ -27,12 +27,16 @@ export function EditorToolbar({
   tool,
   color,
   shape,
+  rotation,
+  flipped,
   doorWidth,
   gridWidth,
   gridHeight,
   onToolChange,
   onColorChange,
   onShapeChange,
+  onRotate,
+  onFlip,
   onDoorWidthChange,
   onResize,
   onClear,
@@ -44,12 +48,16 @@ export function EditorToolbar({
   tool: EditorTool;
   color: Color;
   shape: Shape;
+  rotation: number;
+  flipped: boolean;
   doorWidth: number;
   gridWidth: number;
   gridHeight: number;
   onToolChange: (t: EditorTool) => void;
   onColorChange: (c: Color) => void;
   onShapeChange: (s: Shape) => void;
+  onRotate: () => void;
+  onFlip: () => void;
   onDoorWidthChange: (w: number) => void;
   onResize: (w: number, h: number) => void;
   onClear: () => void;
@@ -142,6 +150,24 @@ export function EditorToolbar({
               {s.name}
             </button>
           ))}
+          <button
+            type="button"
+            className="editor-btn small"
+            onClick={onRotate}
+            title={`Rotate (currently ${rotation * 90}°)`}
+            aria-label="Rotate shape"
+          >
+            ↻ {rotation * 90}°
+          </button>
+          <button
+            type="button"
+            className={`editor-btn small ${flipped ? 'active' : ''}`}
+            onClick={onFlip}
+            title={`Flip (currently ${flipped ? 'on' : 'off'})`}
+            aria-label="Flip shape"
+          >
+            ⇄
+          </button>
         </div>
       )}
 

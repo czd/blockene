@@ -283,6 +283,63 @@ describe('end-to-end: loadLevel → resolveDrag → commitMove', () => {
   });
 });
 
+describe('exit ramp must be clear of other blocks', () => {
+  // The bbox-empty cells that lie between the block's body and the gate need
+  // to be free for an exit to fire. Cells *behind* the body (away from the
+  // gate) don't count — that's what lets an upside-down T exit even when an
+  // L is parked at one of its top corners.
+  test('a T pointing down cannot exit when an L is parked at a gap in front of the body', () => {
+    const state = makeState({
+      width: 5,
+      height: 8,
+      blocks: [
+        { id: 't', color: 'jade', cells: [[1, 5], [2, 5], [3, 5], [2, 6]] },
+        // L parked at (1, 7) — empty bbox cell at the T's pre-exit position.
+        { id: 'l', color: 'crimson', cells: [[0, 7], [1, 7], [0, 6]] },
+      ],
+      doors: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
+    });
+    const r = resolveDrag(state, 't', { x: 0, y: 3 });
+    expect(r.exited).toBe(false);
+  });
+
+  test('a T cannot wedge past an L by wall-sliding around the pre-exit body cell', () => {
+    // L at (1, 6) — the pre-exit position's top-left body cell. If we only
+    // check forward gaps, the wall-slide lets the T traverse to dx > 0.5
+    // (where extent fails) and back to dx < 0.5 (where extent fits) without
+    // ever physically being at the pre-exit position. The pre-exit body
+    // check catches this.
+    const state = makeState({
+      width: 5,
+      height: 8,
+      blocks: [
+        { id: 't', color: 'jade', cells: [[1, 5], [2, 5], [3, 5], [2, 6]] },
+        { id: 'l', color: 'crimson', cells: [[1, 6], [0, 6], [0, 7]] },
+      ],
+      doors: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
+    });
+    const r = resolveDrag(state, 't', { x: 0.4, y: 1.5 });
+    expect(r.exited).toBe(false);
+  });
+
+  test('an upside-down T exits even when blocks sit at its top corners', () => {
+    // Stem at top, body row at the bottom. The top corners (1, Y) and (3, Y)
+    // are bounding-box gaps but they are *behind* the body in the exit
+    // direction — the body sweeps away from them, not through them.
+    const state = makeState({
+      width: 5,
+      height: 8,
+      blocks: [
+        { id: 't', color: 'jade', cells: [[2, 5], [1, 6], [2, 6], [3, 6]] },
+        { id: 'l', color: 'crimson', cells: [[0, 5], [1, 5], [0, 6]] },
+      ],
+      doors: [{ side: 'bottom', position: 1, width: 3, color: 'jade' }],
+    });
+    const r = resolveDrag(state, 't', { x: 0, y: 3 });
+    expect(r.exited).toBe(true);
+  });
+});
+
 describe('Slice 3 — multi-door levels', () => {
   test('mixed-color doors: each block exits through its matching door', () => {
     const state = makeState({

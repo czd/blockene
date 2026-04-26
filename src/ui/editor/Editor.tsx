@@ -10,7 +10,7 @@ import type { Block, Cell, Color, Door, EngineState, Side } from '../../game/eng
 
 import { EditorScene } from './EditorScene';
 import { EditorToolbar } from './EditorToolbar';
-import { SHAPES } from './shapes';
+import { SHAPES, transformShape } from './shapes';
 import type { EditorTool, Shape } from './shapes';
 
 const DEFAULT_GRID = { w: 6, h: 8 };
@@ -34,15 +34,28 @@ export function Editor({
   const [tool, setTool] = useState<EditorTool>('wall');
   const [color, setColor] = useState<Color>('jade');
   const [shape, setShape] = useState<Shape>(SHAPES[0]);
+  const [rotation, setRotation] = useState(0);
+  const [flipped, setFlipped] = useState(false);
   const [doorWidth, setDoorWidth] = useState<number>(1);
+
+  // Reset orientation when the user picks a different base shape — they
+  // expect a fresh canonical orientation, not the leftover rotation/flip.
+  const handleShapeChange = (next: Shape) => {
+    setShape(next);
+    setRotation(0);
+    setFlipped(false);
+  };
 
   const handleWorldClick = useCallback(
     (worldX: number, worldY: number) => {
       const gx = Math.floor(worldX);
       const gy = Math.floor(-worldY);
-      setState((prev) => applyClick(prev, { x: gx, y: gy }, tool, color, shape, doorWidth));
+      const oriented = transformShape(shape.cells, rotation, flipped);
+      setState((prev) =>
+        applyClick(prev, { x: gx, y: gy }, tool, color, oriented, doorWidth),
+      );
     },
-    [tool, color, shape, doorWidth],
+    [tool, color, shape, rotation, flipped, doorWidth],
   );
 
   const handleResize = (w: number, h: number) => {
@@ -96,12 +109,16 @@ export function Editor({
         tool={tool}
         color={color}
         shape={shape}
+        rotation={rotation}
+        flipped={flipped}
         doorWidth={doorWidth}
         gridWidth={state.gridWidth}
         gridHeight={state.gridHeight}
         onToolChange={setTool}
         onColorChange={setColor}
-        onShapeChange={setShape}
+        onShapeChange={handleShapeChange}
+        onRotate={() => setRotation((r) => (r + 1) % 4)}
+        onFlip={() => setFlipped((f) => !f)}
         onDoorWidthChange={setDoorWidth}
         onResize={handleResize}
         onClear={handleClear}
@@ -124,11 +141,11 @@ function applyClick(
   cell: Cell,
   tool: EditorTool,
   color: Color,
-  shape: Shape,
+  shapeCells: [number, number][],
   doorWidth: number,
 ): EngineState {
   if (tool === 'wall') return toggleWall(state, cell);
-  if (tool === 'block') return toggleBlock(state, cell, color, shape);
+  if (tool === 'block') return toggleBlock(state, cell, color, shapeCells);
   if (tool.startsWith('door-')) {
     const side = tool.substring('door-'.length) as Side;
     return toggleDoor(state, cell, side, color, doorWidth);
@@ -163,7 +180,12 @@ function toggleWall(state: EngineState, c: Cell): EngineState {
   return { ...state, walls: [...state.walls, c] };
 }
 
-function toggleBlock(state: EngineState, c: Cell, color: Color, shape: Shape): EngineState {
+function toggleBlock(
+  state: EngineState,
+  c: Cell,
+  color: Color,
+  shapeCells: [number, number][],
+): EngineState {
   const existingId = blockIdAt(state, c);
   if (existingId) {
     const blocks = { ...state.blocks };
@@ -172,7 +194,7 @@ function toggleBlock(state: EngineState, c: Cell, color: Color, shape: Shape): E
   }
   // Place: anchor the shape at the clicked cell. Reject if any target cell
   // is out of bounds, on a wall, or overlaps another block.
-  const cells: Cell[] = shape.cells.map(([dx, dy]) => ({ x: c.x + dx, y: c.y + dy }));
+  const cells: Cell[] = shapeCells.map(([dx, dy]) => ({ x: c.x + dx, y: c.y + dy }));
   for (const target of cells) {
     if (!inBounds(state, target)) return state;
     if (wallIndexAt(state, target) >= 0) return state;

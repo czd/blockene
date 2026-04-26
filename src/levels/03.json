@@ -1,15 +1,87 @@
 {
   "id": "03",
-  "name": "Heavyweights",
+  "name": "Heavy Lifting",
   "gridWidth": 5,
-  "gridHeight": 7,
+  "gridHeight": 8,
   "blocks": [
-    { "id": "a", "color": "jade", "cells": [[0, 3], [1, 3]] },
-    { "id": "b", "color": "crimson", "cells": [[3, 3], [4, 3]] }
+    {
+      "id": "b5",
+      "color": "jade",
+      "cells": [
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "b2",
+      "color": "legendary-gold",
+      "cells": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          4
+        ]
+      ]
+    },
+    {
+      "id": "b3",
+      "color": "crimson",
+      "cells": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          4
+        ]
+      ]
+    }
   ],
   "doors": [
-    { "side": "right", "position": 3, "width": 1, "color": "jade" },
-    { "side": "left", "position": 3, "width": 1, "color": "crimson" }
+    {
+      "side": "bottom",
+      "position": 1,
+      "width": 3,
+      "color": "crimson"
+    },
+    {
+      "side": "left",
+      "position": 3,
+      "width": 2,
+      "color": "legendary-gold"
+    },
+    {
+      "side": "right",
+      "position": 3,
+      "width": 2,
+      "color": "jade"
+    }
   ],
   "walls": []
 }

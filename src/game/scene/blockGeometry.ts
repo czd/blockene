@@ -183,11 +183,21 @@ export function studsForCells(
       if (!cellSet.has(key(cx, cy))) continue;
       // Skip a stud whose disc would cross an outer body edge — i.e. the
       // adjacent cell on the side it bleeds toward isn't in the polyomino.
-      // This is what hides studs near the L's concave corner.
-      if (sx - cx < studRadius && !cellSet.has(key(cx - 1, cy))) continue;
-      if (cx + 1 - sx < studRadius && !cellSet.has(key(cx + 1, cy))) continue;
-      if (sy - cy < studRadius && !cellSet.has(key(cx, cy - 1))) continue;
-      if (cy + 1 - sy < studRadius && !cellSet.has(key(cx, cy + 1))) continue;
+      // Axis bleed: disc reaches a cell side.
+      const dxL = sx - cx;
+      const dxR = cx + 1 - sx;
+      const dyT = sy - cy;
+      const dyB = cy + 1 - sy;
+      if (dxL < studRadius && !cellSet.has(key(cx - 1, cy))) continue;
+      if (dxR < studRadius && !cellSet.has(key(cx + 1, cy))) continue;
+      if (dyT < studRadius && !cellSet.has(key(cx, cy - 1))) continue;
+      if (dyB < studRadius && !cellSet.has(key(cx, cy + 1))) continue;
+      // Diagonal bleed: disc reaches a cell corner where the diagonal
+      // neighbor isn't in the polyomino — happens at any concave corner.
+      if (Math.hypot(dxL, dyT) < studRadius && !cellSet.has(key(cx - 1, cy - 1))) continue;
+      if (Math.hypot(dxR, dyT) < studRadius && !cellSet.has(key(cx + 1, cy - 1))) continue;
+      if (Math.hypot(dxL, dyB) < studRadius && !cellSet.has(key(cx - 1, cy + 1))) continue;
+      if (Math.hypot(dxR, dyB) < studRadius && !cellSet.has(key(cx + 1, cy + 1))) continue;
       out.push({ x: sx, y: -sy });
     }
   }
