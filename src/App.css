@@ -32,7 +32,7 @@ canvas {
 }
 
 .game-stage {
-  flex: 1 1 auto;
+  flex: 3 1 0;
   min-height: 0;
   position: relative;
 }
@@ -46,13 +46,17 @@ canvas {
 /* ---------- HUD ---------- */
 
 .hud {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   color: #f8fafc;
   font-family: system-ui, sans-serif;
   padding: 12px 18px 6px;
 }
 
 .hud-top {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -80,19 +84,24 @@ canvas {
 /* ---------- Big stats (timer + moves) ---------- */
 
 .big-stats {
-  margin-top: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 36px;
-  align-items: flex-end;
+  gap: 6px;
 }
 
 .big-stat {
   text-align: center;
 }
 
+.big-stat--time {
+  width: 100%;
+}
+
 .big-stat-value {
-  font-size: clamp(44px, 13vw, 64px);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
@@ -101,6 +110,7 @@ canvas {
 }
 
 .big-stat-value--time {
+  font-size: clamp(48px, 14vw, 72px);
   color: #f59e0b;
   text-shadow:
     0 5px 0 #92400e,
@@ -109,15 +119,16 @@ canvas {
 }
 
 .big-stat-value--moves {
+  font-size: clamp(72px, 22vw, 120px);
   color: #10b981;
   text-shadow:
-    0 5px 0 #065f46,
-    0 6px 0 rgba(0, 0, 0, 0.25),
-    0 10px 22px rgba(16, 185, 129, 0.18);
+    0 6px 0 #065f46,
+    0 7px 0 rgba(0, 0, 0, 0.25),
+    0 12px 26px rgba(16, 185, 129, 0.2);
 }
 
 .big-stat-label {
-  margin-top: 8px;
+  margin-top: 4px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.22em;

@@ -50,7 +50,7 @@ export function Hud({
         </div>
       </div>
       <div className="big-stats">
-        <div className="big-stat">
+        <div className="big-stat big-stat--time">
           <div className="big-stat-value big-stat-value--time">{formatTime(elapsed)}</div>
           <div className="big-stat-label">Time</div>
         </div>
@@ -69,8 +69,13 @@ function useElapsed(startedAt: number | null, solvedAt: number | null): number {
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
     if (startedAt === null || solvedAt !== null) return;
-    const id = setInterval(() => setNow(performance.now()), 100);
-    return () => clearInterval(id);
+    let raf = 0;
+    const tick = () => {
+      setNow(performance.now());
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [startedAt, solvedAt]);
   if (startedAt === null) return 0;
   return (solvedAt ?? now) - startedAt;

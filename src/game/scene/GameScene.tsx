@@ -8,11 +8,11 @@ import { BoardMesh } from './BoardMesh';
 import { GateMesh } from './GateMesh';
 import { FitOrthoCamera } from './FitOrthoCamera';
 
-// Padding around the board, in world units. Horizontal: 1 cell each side
-// for the gate tabs + a hair more. Vertical: a bit extra to leave room for
-// the HUD and the slight tilt-induced compression.
-const FIT_PAD_X = 2;
-const FIT_PAD_Y = 5;
+// Padding around the board, in world units. Just enough to show the gate
+// tabs that protrude past the frame on each side; the HUD lives outside the
+// canvas now and doesn't need reserved canvas space.
+const FIT_PAD_X = 1.0;
+const FIT_PAD_Y = 1.0;
 
 export function GameScene() {
   const state = useGameStore((s) => s.state);
