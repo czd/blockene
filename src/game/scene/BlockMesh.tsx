@@ -1,22 +1,34 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { RoundedBox } from '@react-three/drei';
-import type { Group, Mesh, MeshStandardMaterial } from 'three';
+import { ExtrudeGeometry, type Group, type Mesh, type MeshStandardMaterial } from 'three';
 
 import type { Block, Side } from '../engine/types';
 import type { ExitingEntry } from '../state/gameStore';
 import { EXIT_ANIM_MS, useGameStore } from '../state/gameStore';
+import { polyominoShape, studsForCells } from './blockGeometry';
 import { blockPalette } from './palette';
-import { decomposeIntoRects } from './blockGeometry';
-import type { Rect } from './blockGeometry';
 
-const CELL_INSET = 0.03;
 const CELL_HEIGHT = 0.74;
+const CORNER_RADIUS = 0.12;
+const BEVEL = 0.05;
 const STUD_EDGE_INSET = 0.23;
 const STUD_RADIUS = 0.085;
 const STUD_HEIGHT = 0.1;
 const HIT_PADDING = 0.2;
 const GRAB_LIFT = 0.18;
+
+function buildBodyGeometry(cells: Block['cells']) {
+  const shape = polyominoShape(cells, CORNER_RADIUS);
+  return new ExtrudeGeometry(shape, {
+    depth: CELL_HEIGHT - BEVEL * 2,
+    bevelEnabled: true,
+    bevelThickness: BEVEL,
+    bevelSize: BEVEL,
+    bevelOffset: -BEVEL,
+    bevelSegments: 3,
+    curveSegments: 8,
+  });
+}
 
 export function BlockMesh({ block }: { block: Block }) {
   const groupRef = useRef<Group>(null);
@@ -27,15 +39,10 @@ export function BlockMesh({ block }: { block: Block }) {
   const offset = isDragging ? dragging.resolved.delta : { x: 0, y: 0 };
   const palette = blockPalette[block.color];
 
-  // One rounded box per rectangular region — multi-cell blocks read as a
-  // single chunky piece without internal seams.
-  const rects = useMemo(() => decomposeIntoRects(block.cells), [block.cells]);
+  const geometry = useMemo(() => buildBodyGeometry(block.cells), [block.cells]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
-  // Studs flow uniformly across each rect: 4N-1 columns wide, 4M-1 rows tall
-  // (3 per cell + one seam stud between each adjacent pair). For a single
-  // cell that's the same 3×3 grid as before; for a 2×1 rect it adds the row
-  // of studs along the seam.
-  const studs = useMemo(() => studsForRects(rects), [rects]);
+  const studs = useMemo(() => studsForCells(block.cells, STUD_EDGE_INSET), [block.cells]);
 
   // Grab-lift: smoothly raise the block while dragging.
   useFrame(() => {
@@ -54,19 +61,9 @@ export function BlockMesh({ block }: { block: Block }) {
         beginDrag(block.id);
       }}
     >
-      {rects.map((r, i) => (
-        <RoundedBox
-          key={`body-${i}`}
-          args={[r.width - CELL_INSET * 2, r.height - CELL_INSET * 2, CELL_HEIGHT]}
-          radius={0.08}
-          smoothness={3}
-          position={[r.x + r.width / 2, -(r.y + r.height / 2), CELL_HEIGHT / 2]}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial color={palette.base} roughness={0.55} metalness={0.05} />
-        </RoundedBox>
-      ))}
+      <mesh geometry={geometry} position={[0, 0, BEVEL]} castShadow receiveShadow>
+        <meshStandardMaterial color={palette.base} roughness={0.55} metalness={0.05} />
+      </mesh>
 
       {studs.map((s, i) => (
         <mesh
@@ -111,7 +108,9 @@ export function ExitingBlockMesh({ entry }: { entry: ExitingEntry }) {
   const particlesRef = useRef<Group>(null);
   const palette = blockPalette[entry.block.color];
 
-  const rects = useMemo(() => decomposeIntoRects(entry.block.cells), [entry.block.cells]);
+  const geometry = useMemo(() => buildBodyGeometry(entry.block.cells), [entry.block.cells]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
   const flyVec = SIDE_VEC[entry.exitSide];
 
   // Deterministic angles + pseudo-random speed/rise so render stays pure.
@@ -147,7 +146,6 @@ export function ExitingBlockMesh({ entry }: { entry: ExitingEntry }) {
 
     const pg = particlesRef.current;
     if (pg) {
-      // Particles burst from where the block was when it triggered.
       pg.position.set(
         cx + 0.5 + entry.startDelta.x,
         -(cy + 0.5) - entry.startDelta.y,
@@ -171,17 +169,9 @@ export function ExitingBlockMesh({ entry }: { entry: ExitingEntry }) {
   return (
     <>
       <group ref={bodyRef}>
-        {rects.map((r, i) => (
-          <mesh
-            key={i}
-            position={[r.x + r.width / 2, -(r.y + r.height / 2), CELL_HEIGHT / 2]}
-          >
-            <boxGeometry
-              args={[r.width - CELL_INSET * 2, r.height - CELL_INSET * 2, CELL_HEIGHT]}
-            />
-            <meshStandardMaterial color={palette.base} transparent opacity={1} />
-          </mesh>
-        ))}
+        <mesh geometry={geometry} position={[0, 0, BEVEL]}>
+          <meshStandardMaterial color={palette.base} transparent opacity={1} />
+        </mesh>
       </group>
       <group ref={particlesRef} position={[cx + 0.5, -(cy + 0.5), CELL_HEIGHT / 2]}>
         {particles.map((_, i) => (
@@ -193,23 +183,4 @@ export function ExitingBlockMesh({ entry }: { entry: ExitingEntry }) {
       </group>
     </>
   );
-}
-
-function studsForRects(rects: Rect[]): { x: number; y: number }[] {
-  const out: { x: number; y: number }[] = [];
-  for (const r of rects) {
-    const nx = 4 * r.width - 1;
-    const ny = 4 * r.height - 1;
-    const stepX = (r.width - STUD_EDGE_INSET * 2) / (nx - 1);
-    const stepY = (r.height - STUD_EDGE_INSET * 2) / (ny - 1);
-    for (let iy = 0; iy < ny; iy++) {
-      for (let ix = 0; ix < nx; ix++) {
-        out.push({
-          x: r.x + STUD_EDGE_INSET + ix * stepX,
-          y: -(r.y + STUD_EDGE_INSET + iy * stepY),
-        });
-      }
-    }
-  }
-  return out;
 }

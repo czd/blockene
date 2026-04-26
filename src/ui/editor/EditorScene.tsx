@@ -1,7 +1,9 @@
+import { useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { ExtrudeGeometry } from 'three';
 
-import type { EngineState } from '../../game/engine/types';
-import { decomposeIntoRects } from '../../game/scene/blockGeometry';
+import type { Block, EngineState } from '../../game/engine/types';
+import { polyominoShape } from '../../game/scene/blockGeometry';
 import { DoorMesh } from '../../game/scene/DoorMesh';
 import { FitOrthoCamera } from '../../game/scene/FitOrthoCamera';
 import { blockPalette, boardPalette } from '../../game/scene/palette';
@@ -69,24 +71,10 @@ export function EditorScene({
           <meshStandardMaterial color={boardPalette.frame} />
         </mesh>
       ))}
-      {/* Blocks (simple — no studs in editor view) */}
-      {Object.values(state.blocks).map((block) => {
-        const rects = decomposeIntoRects(block.cells);
-        const color = blockPalette[block.color].base;
-        return (
-          <group key={block.id}>
-            {rects.map((r, i) => (
-              <mesh
-                key={i}
-                position={[r.x + r.width / 2, -(r.y + r.height / 2), 0.36]}
-              >
-                <boxGeometry args={[r.width - 0.06, r.height - 0.06, 0.7]} />
-                <meshStandardMaterial color={color} />
-              </mesh>
-            ))}
-          </group>
-        );
-      })}
+      {/* Blocks (simple — no studs in editor view, but unified body shape) */}
+      {Object.values(state.blocks).map((block) => (
+        <EditorBlock key={block.id} block={block} />
+      ))}
       {/* Doors */}
       {state.doors.map((door, i) => (
         <DoorMesh
@@ -109,5 +97,24 @@ export function EditorScene({
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
     </Canvas>
+  );
+}
+
+function EditorBlock({ block }: { block: Block }) {
+  const color = blockPalette[block.color].base;
+  const geometry = useMemo(() => {
+    const shape = polyominoShape(block.cells, 0.1);
+    return new ExtrudeGeometry(shape, {
+      depth: 0.7,
+      bevelEnabled: false,
+      curveSegments: 8,
+    });
+  }, [block.cells]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+
+  return (
+    <mesh geometry={geometry} position={[0, 0, 0]}>
+      <meshStandardMaterial color={color} />
+    </mesh>
   );
 }
