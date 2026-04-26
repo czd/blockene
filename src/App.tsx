@@ -11,14 +11,16 @@ import { Hud } from './ui/Hud';
 import { LevelComplete } from './ui/LevelComplete';
 import { LevelPicker } from './ui/LevelPicker';
 import { MainMenu } from './ui/MainMenu';
+import { Scores } from './ui/Scores';
 import './App.css';
 
-type View = 'menu' | 'tutorial' | 'arena' | 'game' | 'editor';
+type View = 'menu' | 'tutorial' | 'arena' | 'game' | 'editor' | 'scores';
 
 function readInitialView(): View {
   const hash = window.location.hash;
   if (hash.includes('editor')) return 'editor';
   if (hash.includes('arena')) return 'arena';
+  if (hash.includes('scores')) return 'scores';
   if (hash.includes('tutorial') || hash.includes('level=')) return 'tutorial';
   return 'menu';
 }
@@ -72,6 +74,10 @@ function App() {
           window.location.hash = 'editor';
           setView('editor');
         }}
+        onScores={() => {
+          window.location.hash = 'scores';
+          setView('scores');
+        }}
       />
     );
   }
@@ -79,6 +85,17 @@ function App() {
   if (view === 'arena') {
     return (
       <ArenaComingSoon
+        onBack={() => {
+          window.location.hash = '';
+          setView('menu');
+        }}
+      />
+    );
+  }
+
+  if (view === 'scores') {
+    return (
+      <Scores
         onBack={() => {
           window.location.hash = '';
           setView('menu');

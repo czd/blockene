@@ -464,6 +464,12 @@ canvas {
   --btn-edge: #4338ca;
 }
 
+.chunky-btn--scores {
+  --btn-face: #f472b6;
+  --btn-face-light: #fbcfe8;
+  --btn-edge: #9d174d;
+}
+
 /* ---------- Level picker ---------- */
 
 .picker {
@@ -501,6 +507,111 @@ canvas {
 
 .picker-back:active {
   transform: scale(0.94);
+}
+
+/* ---------- Scores ---------- */
+
+.scores-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scores-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  background: linear-gradient(155deg, #1e293b, #0f172a);
+}
+
+.scores-num {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.scores-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.scores-stat {
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.scores-stat--time {
+  color: #f59e0b;
+}
+
+.scores-stat--moves {
+  color: #10b981;
+  min-width: 56px;
+  text-align: right;
+}
+
+.scores-reset {
+  margin: 28px auto 0;
+  max-width: 520px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.scores-confirm-text {
+  font-size: 13px;
+  color: #cbd5e1;
+  letter-spacing: 0.04em;
+}
+
+.scores-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 250, 252, 0.14);
+  background: rgba(15, 23, 42, 0.7);
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+}
+
+.scores-btn:hover:not(:disabled) {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.scores-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.scores-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.scores-btn--danger {
+  background: #be123c;
+  border-color: #be123c;
+}
+
+.scores-btn--danger:hover {
+  background: #e11d48;
 }
 
 .picker-header {

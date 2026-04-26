@@ -2,10 +2,12 @@ export function MainMenu({
   onTutorial,
   onArena,
   onEditor,
+  onScores,
 }: {
   onTutorial: () => void;
   onArena: () => void;
   onEditor: () => void;
+  onScores: () => void;
 }) {
   return (
     <div className="menu">
@@ -32,6 +34,15 @@ export function MainMenu({
         >
           <span className="chunky-btn-label">Tutorial</span>
           <span className="chunky-btn-sub">Learn the ropes</span>
+        </button>
+
+        <button
+          type="button"
+          className="chunky-btn chunky-btn--scores"
+          onClick={onScores}
+        >
+          <span className="chunky-btn-label">Scores</span>
+          <span className="chunky-btn-sub">Personal bests</span>
         </button>
 
         <button

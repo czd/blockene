@@ -54,6 +54,7 @@ type GameState = {
   endDrag: () => void;
   undo: () => void;
   restart: () => void;
+  clearBests: () => void;
 };
 
 const EMPTY_STATE: EngineState = {
@@ -248,6 +249,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       blocked: false,
       undos: undos + 1,
     });
+  },
+
+  clearBests() {
+    saveBests({});
+    set({ bests: {}, lastTimeRecord: false, lastMovesRecord: false });
   },
 
   restart() {
