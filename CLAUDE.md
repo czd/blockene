@@ -4,6 +4,8 @@ The full game spec lives in `SPEC.md` at the repo root. **When in doubt, re-read
 
 The current implementation plan lives in `PLAN.md` at the repo root. See [Working with the plan](#working-with-the-plan) below.
 
+Stack-agnostic lessons go into `NOTES.md`. See [Working with NOTES.md](#working-with-notesmd) below.
+
 ---
 
 ## Working with the plan
@@ -19,6 +21,20 @@ The current implementation plan lives in `PLAN.md` at the repo root. See [Workin
 - New slices, new open questions, and new cross-cutting decisions all get added to `PLAN.md`.
 
 The plan and the spec are different artifacts: `SPEC.md` is the product definition (rarely changes); `PLAN.md` is the build sequence (changes constantly).
+
+---
+
+## Working with NOTES.md
+
+`NOTES.md` is a living journal of **stack-agnostic lessons** — what we'd want to remember if we ever rebuild this on a different stack (native app, different web framework, different rendering tech).
+
+- **When you learn something worth carrying forward, add it.** Bug fixes that revealed a non-obvious mechanic, math gotchas, "this is what makes it feel right" tuning — all belong here. Add the entry the moment the lesson lands, not at the end of the slice.
+- **Categorize.** Existing buckets: Mechanics, Math, Feel, Architecture. Add a new bucket only if a note doesn't fit any existing one.
+- **Keep it stack-agnostic.** "We used drei's `RoundedBox`" or "Howler lazy-loads" do **not** belong — they evaporate on a rewrite. "Doors are triggers, not openings" belongs because it's true on any stack.
+- **Write self-contained entries.** A future reader (possibly with no context on this codebase) should be able to read one bullet and understand the lesson.
+- Don't duplicate `PLAN.md` decisions or `SPEC.md` rules — `NOTES.md` is for things that *aren't* in those documents.
+
+Three artifacts, three jobs: `SPEC.md` says **what to build**, `PLAN.md` says **what to build next**, `NOTES.md` says **what we'd carry to a rewrite**.
 
 ---
 
