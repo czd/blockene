@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 
+import { encodeLevel, shortCode } from '../../game/engine/levelHash';
 import {
   emptyState,
   nextBlockId,
@@ -65,6 +66,9 @@ export function Editor({
   const [flipped, setFlipped] = useState(false);
   const [gateSide, setGateSide] = useState<Side>('top');
   const [gateWidth, setGateWidth] = useState(1);
+
+  const [shareNote, setShareNote] = useState<string | null>(null);
+  const shareNoteTimer = useRef<number | null>(null);
 
   const [drag, setDrag] = useState<DragState | null>(null);
   // Tracks a "maybe a click on a block" — promotes to drag-move once the
@@ -206,6 +210,29 @@ export function Editor({
     }
   };
 
+  const handleShare = async () => {
+    const level = serialize(state, meta.id, meta.name);
+    if (level.blocks.length === 0 || level.gates.length === 0) {
+      flashShareNote("Add at least one block and one gate first.");
+      return;
+    }
+    const code = shortCode(level);
+    const encoded = encodeLevel(level);
+    const url = `${window.location.origin}${window.location.pathname}#play=${encoded}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      flashShareNote(`Copied — code ${code}`);
+    } catch {
+      window.prompt(`Share URL (code ${code}):`, url);
+    }
+  };
+
+  const flashShareNote = (msg: string) => {
+    setShareNote(msg);
+    if (shareNoteTimer.current) window.clearTimeout(shareNoteTimer.current);
+    shareNoteTimer.current = window.setTimeout(() => setShareNote(null), 3000);
+  };
+
   const handleImport = () => {
     const raw = window.prompt('Paste level JSON:');
     if (!raw) return;
@@ -255,6 +282,8 @@ export function Editor({
         onTestPlay={() => onTestPlay(state, meta)}
         onExport={handleExport}
         onImport={handleImport}
+        onShare={handleShare}
+        shareNote={shareNote}
         onBack={onBack}
         onShapePointerDown={handleShapePointerDown}
       />

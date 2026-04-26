@@ -52,8 +52,10 @@ export function EditorToolbar({
   onTestPlay,
   onExport,
   onImport,
+  onShare,
   onBack,
   onShapePointerDown,
+  shareNote,
 }: {
   mode: EditorMode;
   color: Color;
@@ -74,11 +76,13 @@ export function EditorToolbar({
   onTestPlay: () => void;
   onExport: () => void;
   onImport: () => void;
+  onShare: () => void;
   onBack: () => void;
   onShapePointerDown: (
     shape: Shape,
     e: ReactPointerEvent<HTMLDivElement>,
   ) => void;
+  shareNote: string | null;
 }) {
   return (
     <div className="editor-toolbar">
@@ -116,9 +120,13 @@ export function EditorToolbar({
         <button type="button" className="editor-btn" onClick={onExport}>
           Export
         </button>
+        <button type="button" className="editor-btn" onClick={onShare}>
+          Share
+        </button>
         <button type="button" className="editor-btn primary" onClick={onTestPlay}>
           ▶ Test play
         </button>
+        {shareNote && <span className="editor-share-note">{shareNote}</span>}
       </div>
 
       <div className="editor-row">

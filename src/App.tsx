@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { decodeLevel } from './game/engine/levelHash';
 import { serialize } from './game/engine/levelSerialize';
 import type { EngineState, Level } from './game/engine/types';
 import { GameScene } from './game/scene/GameScene';
@@ -18,11 +19,20 @@ type View = 'menu' | 'tutorial' | 'arena' | 'game' | 'editor' | 'scores';
 
 function readInitialView(): View {
   const hash = window.location.hash;
+  if (hash.includes('play=')) return 'game';
   if (hash.includes('editor')) return 'editor';
   if (hash.includes('arena')) return 'arena';
   if (hash.includes('scores')) return 'scores';
   if (hash.includes('tutorial') || hash.includes('level=')) return 'tutorial';
   return 'menu';
+}
+
+function readSharedLevelFromHash(): Level | null {
+  // lz-string's URI-safe alphabet is [A-Za-z0-9+-$]; the hash itself never
+  // contains `&` or `=` so we can grab the rest of the hash after `play=`.
+  const m = window.location.hash.match(/play=(.+)$/);
+  if (!m) return null;
+  return decodeLevel(m[1]);
 }
 
 function readLevelFromHash(): number | null {
@@ -36,6 +46,7 @@ function App() {
   const [view, setView] = useState<View>(readInitialView);
   const [levelIndex, setLevelIndex] = useState<number | null>(readLevelFromHash);
   const [editorPlayLevel, setEditorPlayLevel] = useState<Level | null>(null);
+  const [sharedLevel, setSharedLevel] = useState<Level | null>(readSharedLevelFromHash);
   const [editorState, setEditorState] = useState<{
     state: EngineState;
     id: string;
@@ -47,10 +58,10 @@ function App() {
 
   // Picker → game by index.
   useEffect(() => {
-    if (view === 'game' && levelIndex !== null && !editorPlayLevel) {
+    if (view === 'game' && levelIndex !== null && !editorPlayLevel && !sharedLevel) {
       loadLevel(LEVELS[levelIndex]);
     }
-  }, [view, levelIndex, editorPlayLevel, loadLevel]);
+  }, [view, levelIndex, editorPlayLevel, sharedLevel, loadLevel]);
 
   // Editor → test play.
   useEffect(() => {
@@ -58,6 +69,13 @@ function App() {
       loadLevel(editorPlayLevel);
     }
   }, [view, editorPlayLevel, loadLevel]);
+
+  // Shared URL → play.
+  useEffect(() => {
+    if (view === 'game' && sharedLevel) {
+      loadLevel(sharedLevel);
+    }
+  }, [view, sharedLevel, loadLevel]);
 
   if (view === 'menu') {
     return (
@@ -140,27 +158,44 @@ function App() {
 
   // view === 'game'
   const playingFromEditor = editorPlayLevel !== null;
-  const level = playingFromEditor ? editorPlayLevel : levelIndex !== null ? LEVELS[levelIndex] : null;
+  const playingShared = sharedLevel !== null && !playingFromEditor;
+  const level = playingFromEditor
+    ? editorPlayLevel
+    : playingShared
+      ? sharedLevel
+      : levelIndex !== null
+        ? LEVELS[levelIndex]
+        : null;
   if (!level) return null;
 
-  // Treat editor-play as "last": there's no concept of "next level" from the editor.
-  const isLast = playingFromEditor || levelIndex === LEVELS.length - 1;
+  // Editor-play and shared levels are always "last": no next-level progression.
+  const isLast = playingFromEditor || playingShared || levelIndex === LEVELS.length - 1;
   const goBack = () => {
     if (playingFromEditor) {
       setEditorPlayLevel(null);
       setView('editor');
+    } else if (playingShared) {
+      setSharedLevel(null);
+      window.location.hash = '';
+      setView('menu');
     } else {
       setLevelIndex(null);
       setView('tutorial');
     }
   };
 
+  const levelLabel = playingFromEditor
+    ? 'Editor'
+    : playingShared
+      ? `Shared · ${level.id}`
+      : `Level ${String((levelIndex ?? 0) + 1).padStart(2, '0')}`;
+
   return (
     <>
       <div className="game-shell">
         <Hud
-          levelNumber={playingFromEditor ? 0 : (levelIndex ?? 0) + 1}
-          levelName={playingFromEditor ? `Editor — ${level.name}` : level.name}
+          levelLabel={levelLabel}
+          levelName={level.name}
           onBack={goBack}
         />
         <div className="game-stage">
@@ -169,10 +204,10 @@ function App() {
       </div>
       {status === 'won' && (
         <LevelComplete
-          levelNumber={playingFromEditor ? 0 : (levelIndex ?? 0) + 1}
+          levelLabel={levelLabel}
           isLast={isLast}
           onNext={() => {
-            if (!playingFromEditor && levelIndex !== null) {
+            if (!playingFromEditor && !playingShared && levelIndex !== null) {
               setLevelIndex(levelIndex + 1);
             }
           }}

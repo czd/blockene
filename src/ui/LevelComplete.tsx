@@ -2,12 +2,12 @@ import { useGameStore } from '../game/state/gameStore';
 import { formatTime } from './format';
 
 export function LevelComplete({
-  levelNumber,
+  levelLabel,
   isLast,
   onNext,
   onPicker,
 }: {
-  levelNumber: number;
+  levelLabel: string;
   isLast: boolean;
   onNext: () => void;
   onPicker: () => void;
@@ -28,7 +28,7 @@ export function LevelComplete({
   return (
     <div className="overlay overlay--win" role="dialog" aria-modal="true">
       <div className="overlay-card">
-        <div className="overlay-eyebrow">Level {String(levelNumber).padStart(2, '0')}</div>
+        <div className="overlay-eyebrow">{levelLabel}</div>
         <h1 className="overlay-title">Solved</h1>
 
         {(isTimeRecord || isMovesRecord) && (

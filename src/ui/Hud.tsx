@@ -4,11 +4,11 @@ import { useGameStore } from '../game/state/gameStore';
 import { formatTime } from './format';
 
 export function Hud({
-  levelNumber,
+  levelLabel,
   levelName,
   onBack,
 }: {
-  levelNumber: number;
+  levelLabel: string;
   levelName: string;
   onBack: () => void;
 }) {
@@ -26,7 +26,7 @@ export function Hud({
           ←
         </button>
         <div className="hud-title">
-          <div className="hud-level">Level {String(levelNumber).padStart(2, '0')}</div>
+          <div className="hud-level">{levelLabel}</div>
           <div className="hud-name">{levelName}</div>
         </div>
         <div className="hud-actions">
