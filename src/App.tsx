@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { decodeLevel } from './game/engine/levelHash';
+import { parse } from './game/engine/levelLoader';
 import { serialize } from './game/engine/levelSerialize';
 import type { EngineState, Level } from './game/engine/types';
 import { GameScene } from './game/scene/GameScene';
@@ -11,11 +12,12 @@ import { Editor } from './ui/editor/Editor';
 import { Hud } from './ui/Hud';
 import { LevelComplete } from './ui/LevelComplete';
 import { LevelPicker } from './ui/LevelPicker';
+import { Library } from './ui/Library';
 import { MainMenu } from './ui/MainMenu';
 import { Scores } from './ui/Scores';
 import './App.css';
 
-type View = 'menu' | 'tutorial' | 'arena' | 'game' | 'editor' | 'scores';
+type View = 'menu' | 'tutorial' | 'arena' | 'game' | 'editor' | 'scores' | 'library';
 
 function readInitialView(): View {
   const hash = window.location.hash;
@@ -23,6 +25,7 @@ function readInitialView(): View {
   if (hash.includes('editor')) return 'editor';
   if (hash.includes('arena')) return 'arena';
   if (hash.includes('scores')) return 'scores';
+  if (hash.includes('library')) return 'library';
   if (hash.includes('tutorial') || hash.includes('level=')) return 'tutorial';
   return 'menu';
 }
@@ -47,6 +50,7 @@ function App() {
   const [levelIndex, setLevelIndex] = useState<number | null>(readLevelFromHash);
   const [editorPlayLevel, setEditorPlayLevel] = useState<Level | null>(null);
   const [sharedLevel, setSharedLevel] = useState<Level | null>(readSharedLevelFromHash);
+  const [gameReturnView, setGameReturnView] = useState<View>('menu');
   const [editorState, setEditorState] = useState<{
     state: EngineState;
     id: string;
@@ -55,6 +59,7 @@ function App() {
 
   const status = useGameStore((s) => s.status);
   const loadLevel = useGameStore((s) => s.loadLevel);
+  const saveToLibrary = useGameStore((s) => s.saveToLibrary);
 
   // Picker → game by index.
   useEffect(() => {
@@ -70,12 +75,14 @@ function App() {
     }
   }, [view, editorPlayLevel, loadLevel]);
 
-  // Shared URL → play.
+  // Shared URL → play. Also auto-save into the library so the player can
+  // come back to it later without re-pasting the URL.
   useEffect(() => {
     if (view === 'game' && sharedLevel) {
       loadLevel(sharedLevel);
+      saveToLibrary(sharedLevel, 'shared');
     }
-  }, [view, sharedLevel, loadLevel]);
+  }, [view, sharedLevel, loadLevel, saveToLibrary]);
 
   if (view === 'menu') {
     return (
@@ -95,6 +102,34 @@ function App() {
         onScores={() => {
           window.location.hash = 'scores';
           setView('scores');
+        }}
+        onLibrary={() => {
+          window.location.hash = 'library';
+          setView('library');
+        }}
+      />
+    );
+  }
+
+  if (view === 'library') {
+    return (
+      <Library
+        onBack={() => {
+          window.location.hash = '';
+          setView('menu');
+        }}
+        onPlay={(level) => {
+          setEditorPlayLevel(null);
+          setLevelIndex(null);
+          setSharedLevel(level);
+          setGameReturnView('library');
+          window.location.hash = 'library';
+          setView('game');
+        }}
+        onEdit={(entry) => {
+          setEditorState({ state: parse(entry.level), id: entry.id, name: entry.name });
+          window.location.hash = 'editor';
+          setView('editor');
         }}
       />
     );
@@ -176,8 +211,9 @@ function App() {
       setView('editor');
     } else if (playingShared) {
       setSharedLevel(null);
-      window.location.hash = '';
-      setView('menu');
+      const target: View = gameReturnView === 'library' ? 'library' : 'menu';
+      window.location.hash = target === 'menu' ? '' : target;
+      setView(target);
     } else {
       setLevelIndex(null);
       setView('tutorial');

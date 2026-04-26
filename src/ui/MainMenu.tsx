@@ -3,11 +3,13 @@ export function MainMenu({
   onArena,
   onEditor,
   onScores,
+  onLibrary,
 }: {
   onTutorial: () => void;
   onArena: () => void;
   onEditor: () => void;
   onScores: () => void;
+  onLibrary: () => void;
 }) {
   return (
     <div className="menu">
@@ -43,6 +45,15 @@ export function MainMenu({
         >
           <span className="chunky-btn-label">Scores</span>
           <span className="chunky-btn-sub">Personal bests</span>
+        </button>
+
+        <button
+          type="button"
+          className="chunky-btn chunky-btn--library"
+          onClick={onLibrary}
+        >
+          <span className="chunky-btn-label">Library</span>
+          <span className="chunky-btn-sub">Saved levels</span>
         </button>
 
         <button

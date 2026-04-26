@@ -8,7 +8,8 @@ import {
   resize as resizeState,
   serialize,
 } from '../../game/engine/levelSerialize';
-import type { Block, Cell, Color, Gate, EngineState, Side } from '../../game/engine/types';
+import type { Block, Cell, Color, EngineState, Gate, Level, Side } from '../../game/engine/types';
+import { useGameStore } from '../../game/state/gameStore';
 
 import { EditorScene } from './EditorScene';
 import type { EditorSceneHandle } from './EditorScene';
@@ -56,7 +57,7 @@ export function Editor({
   const [state, setState] = useState<EngineState>(
     initial?.state ?? emptyState(DEFAULT_GRID.w, DEFAULT_GRID.h),
   );
-  const [meta, setMeta] = useState({
+  const [meta] = useState({
     id: initial?.id ?? 'custom',
     name: initial?.name ?? 'Custom level',
   });
@@ -67,6 +68,7 @@ export function Editor({
   const [gateSide, setGateSide] = useState<Side>('top');
   const [gateWidth, setGateWidth] = useState(1);
 
+  const saveToLibrary = useGameStore((s) => s.saveToLibrary);
   const [shareNote, setShareNote] = useState<string | null>(null);
   const shareNoteTimer = useRef<number | null>(null);
 
@@ -200,30 +202,25 @@ export function Editor({
     setState((prev) => emptyState(prev.gridWidth, prev.gridHeight));
   };
 
-  const handleExport = async () => {
-    const json = JSON.stringify(serialize(state, meta.id, meta.name), null, 2);
-    try {
-      await navigator.clipboard.writeText(json);
-      alert('Level JSON copied to clipboard.');
-    } catch {
-      window.prompt('Copy this JSON:', json);
-    }
+  const buildCanonicalLevel = (): Level => {
+    const tentative = serialize(state, meta.id, meta.name);
+    return { ...tentative, id: shortCode(tentative) };
   };
 
   const handleShare = async () => {
-    const level = serialize(state, meta.id, meta.name);
+    const level = buildCanonicalLevel();
     if (level.blocks.length === 0 || level.gates.length === 0) {
       flashShareNote("Add at least one block and one gate first.");
       return;
     }
-    const code = shortCode(level);
+    saveToLibrary(level, 'created');
     const encoded = encodeLevel(level);
     const url = `${window.location.origin}${window.location.pathname}#play=${encoded}`;
     try {
       await navigator.clipboard.writeText(url);
-      flashShareNote(`Copied — code ${code}`);
+      flashShareNote(`Copied — code ${level.id}`);
     } catch {
-      window.prompt(`Share URL (code ${code}):`, url);
+      window.prompt(`Share URL (code ${level.id}):`, url);
     }
   };
 
@@ -231,30 +228,6 @@ export function Editor({
     setShareNote(msg);
     if (shareNoteTimer.current) window.clearTimeout(shareNoteTimer.current);
     shareNoteTimer.current = window.setTimeout(() => setShareNote(null), 3000);
-  };
-
-  const handleImport = () => {
-    const raw = window.prompt('Paste level JSON:');
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      const next: EngineState = emptyState(parsed.gridWidth, parsed.gridHeight);
-      for (const b of parsed.blocks ?? []) {
-        next.blocks[b.id] = {
-          id: b.id,
-          color: b.color,
-          cells: b.cells.map(([x, y]: [number, number]) => ({ x, y })),
-          type: 'normal',
-          modifiers: [],
-        };
-      }
-      next.walls = (parsed.walls ?? []).map(([x, y]: [number, number]) => ({ x, y }));
-      next.gates = (parsed.gates ?? []).map((d: Gate) => ({ ...d }));
-      setState(next);
-      setMeta({ id: parsed.id ?? meta.id, name: parsed.name ?? meta.name });
-    } catch (err) {
-      alert(`Couldn't parse that JSON: ${(err as Error).message}`);
-    }
   };
 
   const draggingBlockId = drag?.kind === 'move' ? drag.blockId : null;
@@ -280,8 +253,6 @@ export function Editor({
         onResize={handleResize}
         onClear={handleClear}
         onTestPlay={() => onTestPlay(state, meta)}
-        onExport={handleExport}
-        onImport={handleImport}
         onShare={handleShare}
         shareNote={shareNote}
         onBack={onBack}

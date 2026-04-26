@@ -50,8 +50,6 @@ export function EditorToolbar({
   onResize,
   onClear,
   onTestPlay,
-  onExport,
-  onImport,
   onShare,
   onBack,
   onShapePointerDown,
@@ -74,8 +72,6 @@ export function EditorToolbar({
   onResize: (w: number, h: number) => void;
   onClear: () => void;
   onTestPlay: () => void;
-  onExport: () => void;
-  onImport: () => void;
   onShare: () => void;
   onBack: () => void;
   onShapePointerDown: (
@@ -114,14 +110,8 @@ export function EditorToolbar({
         <button type="button" className="editor-btn" onClick={onClear}>
           Clear
         </button>
-        <button type="button" className="editor-btn" onClick={onImport}>
-          Import
-        </button>
-        <button type="button" className="editor-btn" onClick={onExport}>
-          Export
-        </button>
-        <button type="button" className="editor-btn" onClick={onShare}>
-          Share
+        <button type="button" className="editor-btn editor-btn--gold" onClick={onShare}>
+          ✦ Share
         </button>
         <button type="button" className="editor-btn primary" onClick={onTestPlay}>
           ▶ Test play

@@ -6,6 +6,16 @@ import { commitMove, resolveDrag } from '../engine/moveResolver';
 import type { ResolveResult } from '../engine/moveResolver';
 import type { Block, BlockId, EngineState, Level, Side, Vec2 } from '../engine/types';
 
+export type LibraryOrigin = 'created' | 'shared';
+
+export type LibraryEntry = {
+  id: string;
+  name: string;
+  origin: LibraryOrigin;
+  level: Level;
+  addedAt: number;
+};
+
 type DragState = {
   blockId: BlockId;
   resolved: ResolveResult;
@@ -23,6 +33,7 @@ export type Best = { timeMs: number; moves: number };
 export const EXIT_ANIM_MS = 450;
 
 const BESTS_KEY = 'blockene-bests';
+const LIBRARY_KEY = 'blockene-library';
 
 type GameState = {
   state: EngineState;
@@ -43,6 +54,7 @@ type GameState = {
   undos: number;
   restarts: number;
   bests: Record<string, Best>;
+  library: LibraryEntry[];
   // Whether the most recent win strictly improved each metric (not a tie).
   // Reset on loadLevel/restart; set on win.
   lastTimeRecord: boolean;
@@ -55,6 +67,9 @@ type GameState = {
   undo: () => void;
   restart: () => void;
   clearBests: () => void;
+  saveToLibrary: (level: Level, origin: LibraryOrigin) => void;
+  removeFromLibrary: (id: string) => void;
+  clearLibrary: () => void;
 };
 
 const EMPTY_STATE: EngineState = {
@@ -90,6 +105,25 @@ function saveBests(bests: Record<string, Best>): void {
   }
 }
 
+function loadLibrary(): LibraryEntry[] {
+  try {
+    const raw = globalThis.localStorage?.getItem(LIBRARY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as LibraryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLibrary(library: LibraryEntry[]): void {
+  try {
+    globalThis.localStorage?.setItem(LIBRARY_KEY, JSON.stringify(library));
+  } catch {
+    // Same fall-through as bests — silently drop.
+  }
+}
+
 const COLLIDE_THRESHOLD = 0.15;
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -107,6 +141,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   undos: 0,
   restarts: 0,
   bests: loadBests(),
+  library: loadLibrary(),
   lastTimeRecord: false,
   lastMovesRecord: false,
 
@@ -254,6 +289,35 @@ export const useGameStore = create<GameState>((set, get) => ({
   clearBests() {
     saveBests({});
     set({ bests: {}, lastTimeRecord: false, lastMovesRecord: false });
+  },
+
+  saveToLibrary(level, origin) {
+    const lib = get().library;
+    const existing = lib.findIndex((e) => e.id === level.id);
+    const entry: LibraryEntry = {
+      id: level.id,
+      name: level.name,
+      origin: existing >= 0 ? lib[existing].origin : origin,
+      level,
+      addedAt: existing >= 0 ? lib[existing].addedAt : Date.now(),
+    };
+    const next =
+      existing >= 0
+        ? [...lib.slice(0, existing), entry, ...lib.slice(existing + 1)]
+        : [entry, ...lib];
+    saveLibrary(next);
+    set({ library: next });
+  },
+
+  removeFromLibrary(id) {
+    const next = get().library.filter((e) => e.id !== id);
+    saveLibrary(next);
+    set({ library: next });
+  },
+
+  clearLibrary() {
+    saveLibrary([]);
+    set({ library: [] });
   },
 
   restart() {

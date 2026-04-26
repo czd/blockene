@@ -470,6 +470,12 @@ canvas {
   --btn-edge: #9d174d;
 }
 
+.chunky-btn--library {
+  --btn-face: #22d3ee;
+  --btn-face-light: #a5f3fc;
+  --btn-edge: #155e75;
+}
+
 /* ---------- Level picker ---------- */
 
 .picker {
@@ -612,6 +618,174 @@ canvas {
 
 .scores-btn--danger:hover {
   background: #e11d48;
+}
+
+/* ---------- Library ---------- */
+
+.library-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.library-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  background: linear-gradient(155deg, #1e293b, #0f172a);
+}
+
+.library-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.library-row-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.library-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.library-origin {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.library-origin--created {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+.library-origin--shared {
+  background: rgba(34, 211, 238, 0.18);
+  color: #67e8f9;
+}
+
+.library-row-meta {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.library-code {
+  font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-weight: 600;
+  color: #cbd5e1;
+  letter-spacing: 0.04em;
+}
+
+.library-sep {
+  color: rgba(148, 163, 184, 0.5);
+}
+
+.library-stat {
+  font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-weight: 600;
+}
+
+.library-stat--time {
+  color: #f59e0b;
+}
+
+.library-stat--moves {
+  color: #10b981;
+}
+
+.library-unsolved {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.library-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.library-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 250, 252, 0.14);
+  background: rgba(15, 23, 42, 0.7);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+}
+
+.library-btn:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.library-btn:active {
+  transform: scale(0.95);
+}
+
+.library-btn--primary {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.library-btn--primary:hover {
+  background: #34d399;
+}
+
+.library-btn--icon {
+  width: 32px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.library-empty {
+  max-width: 420px;
+  margin: 32px auto;
+  padding: 28px 24px;
+  text-align: center;
+  color: #cbd5e1;
+  border-radius: 14px;
+  border: 1px dashed rgba(148, 163, 184, 0.3);
+  background: rgba(30, 41, 59, 0.35);
+}
+
+.library-empty p {
+  margin: 0 0 8px;
+}
+
+.library-empty-hint {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.55;
 }
 
 .picker-header {
@@ -771,6 +945,38 @@ canvas {
   height: 28px;
   padding: 0 9px;
   font-size: 12px;
+}
+
+.editor-btn--gold {
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #1f2937;
+  background: linear-gradient(155deg, #fcd34d, #f59e0b);
+  box-shadow:
+    0 3px 0 #92400e,
+    0 4px 0 rgba(0, 0, 0, 0.22),
+    0 8px 16px rgba(245, 158, 11, 0.25);
+  transform: translateY(0);
+  transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+}
+
+.editor-btn--gold:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 0 #92400e,
+    0 5px 0 rgba(0, 0, 0, 0.22),
+    0 10px 20px rgba(245, 158, 11, 0.3);
+}
+
+.editor-btn--gold:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 1px 0 #92400e,
+    0 2px 0 rgba(0, 0, 0, 0.22),
+    0 4px 8px rgba(245, 158, 11, 0.2);
 }
 
 .editor-share-note {
