@@ -11,8 +11,8 @@ import { FitOrthoCamera } from './FitOrthoCamera';
 // Padding around the board, in world units. Just enough to show the gate
 // tabs that protrude past the frame on each side; the HUD lives outside the
 // canvas now and doesn't need reserved canvas space.
-const FIT_PAD_X = 1.0;
-const FIT_PAD_Y = 1.0;
+export const FIT_PAD_X = 1.0;
+export const FIT_PAD_Y = 1.0;
 
 export function GameScene() {
   const state = useGameStore((s) => s.state);

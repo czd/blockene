@@ -32,7 +32,14 @@ canvas {
 }
 
 .game-stage {
-  flex: 3 1 0;
+  /* Sizes itself to the board's natural aspect ratio (set inline from the
+     level's grid dimensions). Capped so the HUD has room for the title bar
+     + counters; on very tall viewports it sits at the bottom so the board
+     edge meets the counters. */
+  flex: 0 0 auto;
+  width: 100%;
+  max-height: calc(100% - 200px);
+  margin-top: auto;
   min-height: 0;
   position: relative;
 }
@@ -46,7 +53,7 @@ canvas {
 /* ---------- HUD ---------- */
 
 .hud {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
